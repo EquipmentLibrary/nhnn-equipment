@@ -294,6 +294,17 @@ function seedData(){
 let data=DEMO?seedData():{models:[],assets:[],loans:[]};
 let tab="desk", manageSub="assets", manageUnlocked=false, deskQuery="", mgQuery="", activeQuery="";
 let locEdit=-1;
+let pendingAssets={};
+function reconcile(d){
+  if(!d||!d.assets)return d;
+  const now=Date.now(), have=new Set(d.assets.map(a=>String(a.assetNumber).toLowerCase()));
+  Object.keys(pendingAssets).forEach(k=>{
+    const p=pendingAssets[k];
+    if(have.has(k)||now-p.t>60000){delete pendingAssets[k];}   // confirmed by server, or give up after 60s
+    else{d.assets=[p.asset,...d.assets];}                       // keep showing it meanwhile
+  });
+  return d;
+}
 function wards(){ if(!data.locations||!data.locations.length) data.locations=WARDS.slice(); return data.locations; }
 let anim=true;
 let lastStaff={role:"Porter"};
@@ -325,9 +336,9 @@ async function persist(action,payload){
   if(DEMO)return null;
   try{
     const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},payload))});
-    const j=await r.json(); if(j&&j.ok&&j.data){data=j.data;lastSig=dataSig(data);render();return j;}
+    const j=await r.json(); if(j&&j.ok&&j.data){data=reconcile(j.data);lastSig=dataSig(data);render();return j;}
   }catch(e){}
-    try{data=await apiGet();lastSig=dataSig(data);render();}catch(e){}
+    try{data=reconcile(await apiGet());lastSig=dataSig(data);render();}catch(e){}
   return null;
 }
 let pollTimer=null,lastSig="";
@@ -338,7 +349,7 @@ function startPoll(){
     if(document.getElementById("modal-root").innerHTML)return;            // don't disrupt an open dialog
     const t=document.activeElement&&document.activeElement.tagName;
     if(t==="INPUT"||t==="SELECT"||t==="TEXTAREA")return;                  // don't interrupt typing/search
-    try{const d=await apiGet();if(!d||!d.assets)return;const s=dataSig(d);if(s!==lastSig){data=d;lastSig=s;render();}}catch(e){}
+    try{const d=reconcile(await apiGet());if(!d||!d.assets)return;const s=dataSig(d);if(s!==lastSig){data=d;lastSig=s;render();}}catch(e){}
   },15000);
 }
 async function boot(){
@@ -647,13 +658,14 @@ async function addAsset(){
   if(!num||!model)return;
   if(data.assets.some(a=>a.assetNumber.toLowerCase()===num.toLowerCase())){toast("That asset number already exists.","err");return;}
   data.assets.unshift({assetNumber:num,model,status:"Available",location:"Equipment Library",owningWard:"",decontaminated:false,collectionLocation:""});
+  pendingAssets[num.toLowerCase()]={asset:data.assets[0],t:Date.now()};
   render();
   const r=await persist("addAsset",{assetNumber:num,model});
-  if(r&&r.res==="duplicate")toast("That asset number already exists.","err");
+  if(r&&r.res==="duplicate"){delete pendingAssets[num.toLowerCase()];data.assets=data.assets.filter(a=>a.assetNumber!==num);render();toast("That asset number already exists.","err");}
   else if(r&&r.res==="reactivated")toast(`${num} brought back into service.`);
   else toast(`${num} added.`);
 }
-function askRemoveAsset(an){askConfirm(`Remove device ${an}?`,()=>{data.assets=data.assets.filter(a=>a.assetNumber!==an);data.loans=data.loans.filter(l=>l.assetNumber!==an);toast(`${an} removed.`);persist("removeAsset",{assetNumber:an});render();},true);}
+function askRemoveAsset(an){askConfirm(`Remove device ${an}?`,()=>{delete pendingAssets[an.toLowerCase()];data.assets=data.assets.filter(a=>a.assetNumber!==an);data.loans=data.loans.filter(l=>l.assetNumber!==an);toast(`${an} removed.`);persist("removeAsset",{assetNumber:an});render();},true);}
 
 /* ----- manage: models (add / edit / delete) ----- */
 function renderModels(){
