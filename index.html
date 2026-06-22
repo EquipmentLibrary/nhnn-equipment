@@ -322,12 +322,13 @@ function resizeImage(file,cb){const r=new FileReader();r.onload=()=>{const img=n
 /* ---------------- backend API ---------------- */
 async function apiGet(){const r=await fetch(CONFIG.API_URL+"?action=data&t="+Date.now());return await r.json();}
 async function persist(action,payload){
-  if(DEMO)return;
+  if(DEMO)return null;
   try{
     const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},payload))});
-    const j=await r.json(); if(j&&j.ok&&j.data){data=j.data;lastSig=dataSig(data);render();return;}
+    const j=await r.json(); if(j&&j.ok&&j.data){data=j.data;lastSig=dataSig(data);render();return j;}
   }catch(e){}
     try{data=await apiGet();lastSig=dataSig(data);render();}catch(e){}
+  return null;
 }
 let pollTimer=null,lastSig="";
 function dataSig(d){return (((d&&d.assets)||[]).map(a=>a.status+"@"+a.location).join("|"))+"#"+(((d&&d.loans)||[]).length)+"#"+(((d&&d.models)||[]).length);}
@@ -641,12 +642,16 @@ function renderAssetList(){
     <span class="schip ${stCls(a.status)}"><span class="dot"></span>${esc(a.status)}</span>
     <button class="iconbtn danger" title="Remove" onclick="askRemoveAsset('${esc(a.assetNumber)}')">${I.trash}</button></div>`).join("");
 }
-function addAsset(){
+async function addAsset(){
   const model=val("aModel"),num=val("aNum").trim();
   if(!num||!model)return;
   if(data.assets.some(a=>a.assetNumber.toLowerCase()===num.toLowerCase())){toast("That asset number already exists.","err");return;}
   data.assets.unshift({assetNumber:num,model,status:"Available",location:"Equipment Library",owningWard:"",decontaminated:false,collectionLocation:""});
-  toast(`${num} added.`);persist("addAsset",{assetNumber:num,model});render();
+  render();
+  const r=await persist("addAsset",{assetNumber:num,model});
+  if(r&&r.res==="duplicate")toast("That asset number already exists.","err");
+  else if(r&&r.res==="reactivated")toast(`${num} brought back into service.`);
+  else toast(`${num} added.`);
 }
 function askRemoveAsset(an){askConfirm(`Remove device ${an}?`,()=>{data.assets=data.assets.filter(a=>a.assetNumber!==an);data.loans=data.loans.filter(l=>l.assetNumber!==an);toast(`${an} removed.`);persist("removeAsset",{assetNumber:an});render();},true);}
 
