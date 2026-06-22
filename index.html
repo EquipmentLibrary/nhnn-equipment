@@ -587,9 +587,7 @@ function renderAssets(){
       <div class="panel pad"><h2>Add a device</h2>
         <div class="field"><label class="lab">Model</label><select id="aModel">${data.models.map(m=>`<option>${esc(m.name)}</option>`).join("")}</select></div>
         <div class="field"><label class="lab">Asset label / number</label>
-          <div class="inline"><input class="tinput mono" id="aNum" value="${nextNum()}">
-            <button class="btn btn-ghost" onclick="document.getElementById('aNum').value=nextNum()">Auto</button></div>
-          <p class="hint">Auto continues from the highest existing number.</p></div>
+          <input class="tinput mono" id="aNum" placeholder="e.g. 40044605"></div>
         <button class="btn btn-primary" style="width:100%" onclick="addAsset()">${I.plus} Add device</button>
       </div>
       <div class="panel pad"><h2>Import / export</h2>
