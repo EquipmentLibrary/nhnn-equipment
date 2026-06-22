@@ -293,6 +293,8 @@ function seedData(){
 /* ---------------- state ---------------- */
 let data=DEMO?seedData():{models:[],assets:[],loans:[]};
 let tab="desk", manageSub="assets", manageUnlocked=false, deskQuery="", mgQuery="", activeQuery="";
+let locEdit=-1;
+function wards(){ if(!data.locations||!data.locations.length) data.locations=WARDS.slice(); return data.locations; }
 let anim=true;
 let lastStaff={role:"Porter"};
 let modal=null;                 // loan/return
@@ -456,7 +458,7 @@ function openModal(mode,modelId,presetId){
       ${showSearch?`<div class="search scan modalsearch"><span class="si">${I.scan}</span><input id="mPickQ" placeholder="Scan or filter by asset number…" autocomplete="off"></div>`:""}
       <div id="mPickList" style="max-height:210px;overflow-y:auto;padding-right:2px"></div>
       ${isLoan?`<div class="step"><span class="num">2</span><span>Destination ward</span></div>
-        <select id="mWard"><option value="">Select a ward…</option>${WARDS.map(w=>`<option>${esc(w)}</option>`).join("")}</select>`:""}
+        <select id="mWard"><option value="">Select a ward…</option>${wards().map(w=>`<option>${esc(w)}</option>`).join("")}</select>`:""}
       <div class="step"><span class="num">${isLoan?"3":"2"}</span><span>${isLoan?"Loaned by":"Returned by"}</span></div>
       <div class="toggle"><button class="tg ${modal.role==="Biomed"?"on":""}" data-role="Biomed" onclick="setRole('Biomed')">Biomed</button>
         <button class="tg ${modal.role==="Porter"?"on":""}" data-role="Porter" onclick="setRole('Porter')">Porter</button></div>
@@ -570,10 +572,11 @@ function renderManage(){
     <div class="row"><h1>Manage equipment</h1>
       <div style="display:flex;gap:10px;align-items:center">
         <div class="subtabs"><button class="subtab ${manageSub==="assets"?"on":""}" onclick="setSub('assets')">Devices</button>
-          <button class="subtab ${manageSub==="models"?"on":""}" onclick="setSub('models')">Models</button></div>
+          <button class="subtab ${manageSub==="models"?"on":""}" onclick="setSub('models')">Models</button>
+          <button class="subtab ${manageSub==="locations"?"on":""}" onclick="setSub('locations')">Locations</button></div>
         <button class="btn btn-ghost btn-sm" onclick="askReset()">${I.reset} Reset</button>
       </div></div><div id="mg"></div>`;
-  manageSub==="assets"?renderAssets():renderModels();
+  manageSub==="assets"?renderAssets():manageSub==="models"?renderModels():renderLocations();
 }
 
 /* ----- manage: devices + import/export ----- */
@@ -751,6 +754,42 @@ function exportData(){
 
 /* ---------------- nav + misc ---------------- */
 function setTab(t){tab=t;anim=true;render();}
+function renderLocations(){
+  const list=wards();
+  document.getElementById("mg").innerHTML=`
+  <div class="mgrid">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="panel pad"><h2>Add a location</h2>
+        <div class="field"><label class="lab">Ward / area name</label><input class="tinput" id="locNew" placeholder="e.g. CW2 - Victor Horsley Ward" onkeydown="if(event.key==='Enter')addLocation()"></div>
+        <button class="btn btn-primary" style="width:100%" onclick="addLocation()">${I.plus} Add location</button>
+        <p class="hint">These appear in the loan dropdown and the nurse return form.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="listhead" style="font-weight:700;color:var(--ink)">Locations <span class="mono" style="color:var(--muted);font-weight:600">${list.length}</span></div>
+      <div style="max-height:66vh;overflow-y:auto">${list.map((w,i)=> i===locEdit
+        ? `<div class="litem"><input class="tinput" id="locEditInput" value="${esc(w)}" style="flex:1" onkeydown="if(event.key==='Enter')saveLocation(${i})"><button class="btn btn-primary btn-sm" onclick="saveLocation(${i})">Save</button><button class="iconbtn" title="Cancel" onclick="locEdit=-1;renderLocations()">${I.x}</button></div>`
+        : `<div class="litem"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w)}</span><button class="iconbtn" title="Rename" onclick="locEdit=${i};renderLocations()">${I.edit}</button><button class="iconbtn danger" title="Remove" onclick="askRemoveLocation(${i})">${I.trash}</button></div>`
+      ).join("")}</div>
+    </div>
+  </div>`;
+  const inp=document.getElementById("locEditInput"); if(inp){inp.focus();inp.select();}
+}
+function addLocation(){
+  const v=val("locNew").trim(); if(!v)return;
+  if(wards().some(x=>x.toLowerCase()===v.toLowerCase())){toast("That location already exists.","err");return;}
+  data.locations=wards().slice(); data.locations.push(v);
+  toast(`${v} added.`); persist("addLocation",{name:v}); locEdit=-1; renderLocations();
+}
+function saveLocation(i){
+  const nv=val("locEditInput").trim(), old=wards()[i]; if(!nv||nv===old){locEdit=-1;renderLocations();return;}
+  if(wards().some((x,j)=>j!==i&&x.toLowerCase()===nv.toLowerCase())){toast("That location already exists.","err");return;}
+  data.locations[i]=nv; toast("Location updated."); persist("renameLocation",{oldName:old,name:nv}); locEdit=-1; renderLocations();
+}
+function askRemoveLocation(i){
+  const name=wards()[i];
+  askConfirm(`Remove location \u201c${name}\u201d?`,()=>{ data.locations=wards().filter((_,j)=>j!==i); toast(`${name} removed.`); persist("removeLocation",{name}); locEdit=-1; renderLocations(); },true);
+}
 function setSub(s){manageSub=s;mgQuery="";anim=true;render();}
 function emptyHTML(icon,title,hint){return `<div class="empty"><div class="circle">${icon}</div><b>${esc(title)}</b><div style="font-size:14px;margin-top:5px">${esc(hint)}</div></div>`;}
 
