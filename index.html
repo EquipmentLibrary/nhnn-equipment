@@ -301,6 +301,9 @@ let confirmCb=null;
 
 /* ---------------- helpers ---------------- */
 const BASE_URL="https://script.google.com/macros/s/AKfycbwMgfoW2BqD35nHQYTc__2slkvTUlYKRCyc30lN7I5gVTTfUk7j2UYQtqvN4eEljEM5/exec";
+// Generic returns form the QR label opens. Works now (type the asset no.). For CAMERA scanning,
+// host return.html on GitHub Pages and set this to its link, e.g. "https://YOURNAME.github.io/REPO/return.html"
+const RETURN_URL=BASE_URL+"?page=return";
 const p2=n=>String(n).padStart(2,"0");
 const nextModelNumber=()=>{let m=0;data.models.forEach(x=>{if((x.number||0)>m)m=x.number;});return m+1;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -319,15 +322,26 @@ async function persist(action,payload){
   if(DEMO)return;
   try{
     const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},payload))});
-    const j=await r.json(); if(j&&j.ok&&j.data){data=j.data;render();return;}
+    const j=await r.json(); if(j&&j.ok&&j.data){data=j.data;lastSig=dataSig(data);render();return;}
   }catch(e){}
-    try{data=await apiGet();render();}catch(e){}
+    try{data=await apiGet();lastSig=dataSig(data);render();}catch(e){}
+}
+let pollTimer=null,lastSig="";
+function dataSig(d){return (((d&&d.assets)||[]).map(a=>a.status+"@"+a.location).join("|"))+"#"+(((d&&d.loans)||[]).length)+"#"+(((d&&d.models)||[]).length);}
+function startPoll(){
+  if(DEMO)return; clearInterval(pollTimer);
+  pollTimer=setInterval(async()=>{
+    if(document.getElementById("modal-root").innerHTML)return;            // don't disrupt an open dialog
+    const t=document.activeElement&&document.activeElement.tagName;
+    if(t==="INPUT"||t==="SELECT"||t==="TEXTAREA")return;                  // don't interrupt typing/search
+    try{const d=await apiGet();if(!d||!d.assets)return;const s=dataSig(d);if(s!==lastSig){data=d;lastSig=s;render();}}catch(e){}
+  },15000);
 }
 async function boot(){
   if(DEMO){data=seedData();render();return;}
   document.getElementById("app").innerHTML='<div style="padding:64px;text-align:center;color:#5d6b7e;font-family:system-ui">Loading the library…</div>';
   try{data=await apiGet();}catch(e){data={models:[],assets:[],loans:[]};}
-  render();
+  render(); lastSig=dataSig(data); startPoll();
 }
 
 /* ---------------- render shell ---------------- */
@@ -578,6 +592,7 @@ function renderAssets(){
         <button class="btn btn-primary" style="width:100%;margin-bottom:9px" onclick="document.getElementById('importFile').click()">${I.upload} Import spreadsheet</button>
         <div class="inline"><button class="btn btn-ghost" style="flex:1" onclick="downloadTemplate()">${I.sheet} Template</button>
           <button class="btn btn-ghost" style="flex:1" onclick="exportData()">${I.download} Export</button></div>
+        <button class="btn btn-ghost" style="width:100%;margin-top:9px" onclick="printGenericLabel()">${I.label} Print returns label (QR)</button>
         <p class="hint">Spreadsheet columns (first sheet): <b>AssetNumber, Model, Type, Ref, Category</b> — one row per device. Models are created automatically; duplicate labels are skipped. .xlsx or .csv.</p>
       </div>
     </div>
@@ -780,6 +795,13 @@ function printAssetLabel(an){
   const front=`<div class="pg"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Biomedical Engineering &middot; Model #${p2(model.number||0)}</div></div><div class="b"><div class="no">${esc(asset.assetNumber)}</div><div class="mn">${esc(asset.model)}</div>${qr?`<img class="qr" src="${qr}">`:""}<div class="cap">Finished with this device?<br>Scan for its details and to log return &amp; decontamination.</div></div><div class="foot">No phone? Use the slip on the back &middot; ext. 74321</div></div>`;
   const back=`<div class="pg"><div class="h"><div class="lib">Return &amp; decontamination</div><div class="dep">${esc(asset.assetNumber)} &middot; ${esc(asset.model)}</div></div><div class="bl"><div><div class="lb">Ready for collection?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Decontaminated?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Signed off by (nurse)</div><div class="ln"></div></div><div><div class="lb">Date</div><div class="ln"></div></div></div><div class="foot">Hand this slip to the Equipment Library &middot; ext. 74321</div></div>`;
   const doc="<!doctype html><html><head><meta charset='utf-8'><title>A6 "+esc(an)+"</title><style>"+css+"</style></head><body>"+front+back+"<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
+  try{const w=window.open("","_blank");if(!w){toast("Allow pop-ups to print, or print from the deployed site.","err");return;}w.document.open();w.document.write(doc);w.document.close();}catch(e){toast("Print view is blocked here, works once deployed.","err");}
+}
+function printGenericLabel(){
+  const qr=qrSrc(RETURN_URL);
+  const css="@page{size:A6;margin:0}*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}body{margin:0}.pg{width:105mm;height:148mm;display:flex;flex-direction:column;overflow:hidden}.h{background:#14181f;color:#fff;padding:9mm 7mm 7mm}.lib{font-size:16pt;font-weight:800}.dep{font-size:8pt;letter-spacing:1.4px;text-transform:uppercase;color:#b9c2cf;margin-top:2mm}.b{flex:1;padding:8mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5mm}.big{font-size:19pt;font-weight:800;color:#14181f}.qr{width:54mm;height:54mm}.cap{font-size:10pt;color:#444;line-height:1.5}.foot{font-size:8pt;color:#888;text-align:center;padding:6mm;border-top:1px dashed #aaa}";
+  const body=`<div class="pg"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Equipment returns</div></div><div class="b"><div class="big">Returning a device?</div>${qr?`<img class="qr" src="${qr}">`:`<div class="qr" style="border:1px dashed #aaa;display:grid;place-items:center;font-size:9pt;color:#999">QR loads<br>when deployed</div>`}<div class="cap">Scan this code with your phone, then type the device&#39;s <b>asset number</b> to tell us it&#39;s ready for collection.</div></div><div class="foot">Help desk &middot; ext. 74321</div></div>`;
+  const doc="<!doctype html><html><head><meta charset='utf-8'><title>Returns label</title><style>"+css+"</style></head><body>"+body+"<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
   try{const w=window.open("","_blank");if(!w){toast("Allow pop-ups to print, or print from the deployed site.","err");return;}w.document.open();w.document.write(doc);w.document.close();}catch(e){toast("Print view is blocked here, works once deployed.","err");}
 }
 
