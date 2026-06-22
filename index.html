@@ -506,7 +506,7 @@ function submitModal(){
     if(isSX){
       data.assets=data.assets.filter(a=>a.assetNumber!==modal.pick);
       data.loans.unshift({id:"L-"+Date.now(),assetNumber:modal.pick,model:model.name,ward,loanType:"Service Exchange",handledByRole:role,note,loanedAt:Date.now(),returnedAt:Date.now(),collectionReadyAt:null,collectionLocation:"",decontaminated:false});
-      toast(`${modal.pick} sent to ${ward} as service exchange — removed from stock. Email sent to update records.`,"sx");persist("loan",{assetNumber:modal.pick,model:model.name,ward,role,note,loanType:"Service Exchange"});
+      toast(`${modal.pick} sent to ${ward} as service exchange — removed from stock. Email sent to update records.`,"sx");const _sx=modal.pick;persist("loan",{assetNumber:_sx,model:model.name,ward,role,note,loanType:"Service Exchange"}).then(()=>persist("removeAsset",{assetNumber:_sx}));
     }else{
       data.assets=data.assets.map(a=>a.assetNumber===modal.pick?{...a,status:"On Loan",location:ward}:a);
       data.loans.unshift({id:"L-"+Date.now(),assetNumber:modal.pick,model:model.name,ward,loanType:"Standard",handledByRole:role,note,loanedAt:Date.now(),returnedAt:null,collectionReadyAt:null,collectionLocation:"",decontaminated:false});
