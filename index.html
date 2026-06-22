@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHNN Equipment Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{
+  /* new semantic palette */
+  --ink:#14181f;--ink2:#1e2632;--paper:#eef1f5;--surface:#ffffff;
+  --line:#dee3ea;--line2:#c6cdd8;
+  --blue:#005EB8;--blue-d:#00396f;--blue-l:#4aa3e8;
+  --text:#1b2330;--muted:#5d6b7e;--faint:#8b97a8;
+  --green:#1f8a4c;--amber:#b45309;--sky:#0a6cb5;--violet:#6d28d9;--rose:#c2334d;
+  --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+  --disp:'Space Grotesk',var(--sans);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* legacy aliases so existing inline styles still resolve */
+  --s900:#14181f;--s700:#334155;--s500:#5d6b7e;--s400:#8b97a8;--s300:#cbd5e1;--s200:#e6ebf2;--s100:#eef1f5;--s50:#f7f9fb;
+  --emerald:#1f8a4c;--nhs:#005EB8;--nhs-dark:#00396f;--sx:#6d28d9;--ring:0 0 0 3px rgba(0,94,184,.16);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--paper);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+svg{display:block}
+
+/* header */
+header{background:var(--ink);color:#fff;position:sticky;top:0;z-index:30}
+.hbar{display:flex;align-items:stretch;gap:18px;min-height:62px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;padding:11px 0}
+.logo{height:34px;width:34px;border-radius:8px;background:var(--blue);display:grid;place-items:center;color:#fff;flex:0 0 auto}
+.title{font-family:var(--disp);font-weight:700;letter-spacing:-.01em;font-size:15px;line-height:1}
+.sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:5px;line-height:1}
+nav{margin-left:auto;display:flex;align-items:stretch;gap:18px}
+.tab{display:flex;align-items:center;gap:7px;border:0;background:transparent;color:rgba(255,255,255,.6);font-family:var(--disp);font-weight:500;font-size:13.5px;padding:0;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s}
+.tab:hover{color:#fff}
+.tab.active{color:#fff;border-bottom-color:var(--blue-l)}
+
+/* manifest bar */
+.manifest{background:var(--surface);border-bottom:1px solid var(--line)}
+.mfrow{display:flex;flex-wrap:wrap;gap:0}
+.mf{display:flex;flex-direction:column;gap:5px;padding:15px 24px 15px 0;margin-right:24px;border-right:1px solid var(--line)}
+.mf:last-child{border-right:0;margin-right:0}
+.mf .n{font-family:var(--mono);font-weight:600;font-size:23px;line-height:1;color:var(--ink);letter-spacing:-.02em}
+.mf .l{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint)}
+.mf .l.l-green{color:var(--green)}.mf .l.l-amber{color:var(--amber)}.mf .l.l-sky{color:var(--sky)}
+
+main{padding:30px 0 72px}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+h1{font-family:var(--disp);font-size:23px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:0}
+
+/* search */
+.search{position:relative;max-width:300px;width:100%}
+.search .si{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint);display:flex}
+.search input{width:100%;border:1px solid var(--line2);border-radius:9px;padding:10px 12px 10px 38px;font-size:14px;font-family:var(--sans);outline:none;background:var(--surface);color:var(--text)}
+.search input:focus{border-color:var(--blue);box-shadow:var(--ring)}
+.modalsearch{max-width:none;margin-bottom:10px}
+
+/* grid + cards */
+.grid{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:620px){.grid{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.grid{grid-template-columns:1fr 1fr 1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--ink);transform:translateY(-2px)}
+.cphoto{height:172px;width:100%;display:grid;place-items:center;position:relative;overflow:hidden;background:#fff;color:var(--blue);border-bottom:1px solid var(--line)}
+.cphoto.empty{background:repeating-linear-gradient(45deg,#eef2f7,#eef2f7 11px,#e8edf3 11px,#e8edf3 22px);color:#9fb1c6}
+.cphoto img{position:absolute;inset:10px;width:calc(100% - 20px);height:calc(100% - 20px);object-fit:contain;display:block}
+.cnum{position:absolute;top:11px;left:11px;font-family:var(--mono);font-weight:700;font-size:15px;background:var(--ink);color:#fff;padding:4px 10px;border-radius:7px}
+.sxtag{position:absolute;top:11px;right:11px}
+.cbody{padding:14px 15px 6px;flex:1}
+.mname{font-family:var(--disp);font-weight:600;color:var(--ink);font-size:16px;line-height:1.25;letter-spacing:-.01em}
+.mmeta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:6px;letter-spacing:.01em}
+.avl{display:flex;align-items:baseline;gap:8px;margin-top:13px}
+.avl .n{font-family:var(--mono);font-weight:600;font-size:22px;line-height:1}
+.avl small{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.cbtns{display:flex;gap:8px;padding:13px 15px 15px;border-top:1px solid var(--line);margin-top:8px}
+.focus{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;max-width:560px}
+@media(min-width:560px){.focus{flex-direction:row}}
+.focusphoto{width:100%;height:158px;position:relative;overflow:hidden;background:#fff;color:var(--blue);display:grid;place-items:center;flex:0 0 auto;border-bottom:1px solid var(--line)}
+@media(min-width:560px){.focusphoto{width:180px;height:240px;border-bottom:0;border-right:1px solid var(--line)}}
+.focusphoto img{position:absolute;inset:10px;width:calc(100% - 20px);height:calc(100% - 20px);object-fit:contain;display:block}
+.focusphoto.empty{background:repeating-linear-gradient(45deg,#eef2f7,#eef2f7 11px,#e8edf3 11px,#e8edf3 22px);color:#9fb1c6}
+.focusbody{padding:18px;flex:1;min-width:0}
+.focusno{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--ink);letter-spacing:-.01em;margin-top:4px}
+.focusmodel{font-family:var(--disp);font-weight:600;color:var(--ink);font-size:15px;margin-top:5px}
+.focusmodel .mono{color:var(--muted);font-size:13px;font-weight:600}
+.focusmeta{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.focusact{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}
+.focusact .btn-primary,.focusact .btn-return{flex:1;min-width:170px}
+
+/* tags + chips */
+.badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:6px;padding:4px 8px;border:1px solid}
+.b-sx{border-color:#d9ccf7;background:#f4f0fe;color:var(--violet)}
+.b-ready{border-color:#bcdcf3;background:#ebf5fc;color:var(--sky)}
+.schip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:4px 8px;border:1px solid;flex:0 0 auto}
+.dot{height:6px;width:6px;border-radius:99px}
+.s-Available{background:#eaf7f0;color:var(--green);border-color:#bfe6cf}.s-Available .dot{background:var(--green)}
+.s-OnLoan{background:#fdf3e6;color:var(--amber);border-color:#f0d9b5}.s-OnLoan .dot{background:var(--amber)}
+.s-Awaiting{background:#ebf5fc;color:var(--sky);border-color:#bcdcf3}.s-Awaiting .dot{background:var(--sky)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;padding:10px 14px;font-size:13.5px;font-weight:600;font-family:var(--sans);cursor:pointer;border:1px solid transparent;transition:.13s;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--blue);color:#fff;flex:1}
+.btn-primary:hover{background:var(--blue-d)}
+.btn-primary:disabled{background:#aeb8c5;cursor:not-allowed}
+.btn-ghost{background:var(--surface);color:var(--text);border-color:var(--line2)}
+.btn-ghost:hover{border-color:var(--ink)}
+.btn-danger{background:var(--rose);color:#fff}
+.btn-return{background:var(--amber);color:#fff}
+.btn-return:hover{filter:brightness(1.07)}
+.btn-return .mini{background:rgba(255,255,255,.24);color:#fff}
+.loc{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:#eef2f7;border:1px solid var(--line);border-radius:7px;padding:4px 9px;flex:0 0 auto}
+.loc svg{width:12px;height:12px}
+.btn-sm{padding:8px 11px;font-size:13px}
+.mini{font-family:var(--mono);margin-left:1px;border-radius:5px;background:rgba(180,83,9,.14);color:var(--amber);font-size:11px;font-weight:600;padding:1px 6px}
+
+/* panels + lists */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel.pad{padding:18px}
+.panel h2{font-family:var(--disp);font-size:15px;font-weight:600;color:var(--ink);margin:0 0 14px}
+.mgrid{display:grid;gap:18px;grid-template-columns:1fr}@media(min-width:960px){.mgrid{grid-template-columns:340px 1fr}}
+.lab{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:7px}
+.field{margin-bottom:14px}.inline{display:flex;gap:9px}
+.hint{font-size:11.5px;color:var(--faint);margin:7px 0 0;line-height:1.55}
+.listhead{padding:13px;border-bottom:1px solid var(--line)}
+.litem{display:flex;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--line)}
+.litem:last-child{border-bottom:0}.litem:hover{background:#f7f9fb}
+.mono{font-family:var(--mono)}
+.thumb{height:44px;width:44px;border-radius:8px;background:#e7edf4;color:var(--blue);display:grid;place-items:center;flex:0 0 auto;overflow:hidden}
+.thumb img{height:100%;width:100%;object-fit:cover}
+.iconbtn{height:34px;width:34px;border:1px solid var(--line2);background:var(--surface);border-radius:8px;color:var(--muted);cursor:pointer;display:grid;place-items:center;flex:0 0 auto;transition:.12s}
+.iconbtn:hover{border-color:var(--ink);color:var(--ink)}
+.iconbtn.danger:hover{color:var(--rose);border-color:var(--rose)}
+
+/* inputs + toggles */
+select,.tinput{width:100%;border:1px solid var(--line2);border-radius:9px;padding:10px 12px;font-size:14px;font-family:var(--sans);outline:none;background:var(--surface);color:var(--text)}
+select:focus,.tinput:focus{border-color:var(--blue);box-shadow:var(--ring)}
+.tinput.mono{font-family:var(--mono)}
+.toggle{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.tg{border:1px solid var(--line2);background:var(--surface);border-radius:9px;padding:10px;font-weight:600;font-size:13.5px;color:var(--text);cursor:pointer;font-family:var(--sans);transition:.12s}
+.tg.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.subtabs{display:inline-flex;background:#e4e9f0;border-radius:9px;padding:3px}
+.subtab{padding:7px 13px;border-radius:7px;font-size:13.5px;font-weight:600;color:var(--muted);border:0;background:transparent;cursor:pointer;font-family:var(--sans)}
+.subtab.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+.empty{text-align:center;padding:54px 24px;color:var(--faint)}
+.empty .circle{height:52px;width:52px;border-radius:10px;background:#e7edf4;display:grid;place-items:center;margin:0 auto 14px;color:var(--blue)}
+.empty b{display:block;color:var(--text);font-family:var(--disp);font-weight:600;font-size:15px}
+.demohint{font-family:var(--mono);text-align:center;color:var(--faint);font-size:11px;letter-spacing:.05em;margin-top:28px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(15,21,30,.5);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:40;padding:16px;animation:fade .14s ease}
+@media(max-width:600px){.overlay{align-items:flex-end;padding:0}}
+.modal{background:var(--surface);border-radius:14px;width:100%;max-width:520px;max-height:94vh;display:flex;flex-direction:column;border:1px solid var(--line);box-shadow:0 24px 60px -20px rgba(8,15,25,.5);animation:pop .18s cubic-bezier(.2,.8,.3,1.1)}
+@media(max-width:600px){.modal{border-radius:14px 14px 0 0;max-width:none}}
+.mhead{display:flex;align-items:center;gap:12px;padding:17px 19px;border-bottom:1px solid var(--line)}
+.mhead .htitle{font-family:var(--disp);font-weight:600;color:var(--ink);font-size:16px}
+.eyebrow{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.eyebrow2{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.x{margin-left:auto;height:32px;width:32px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted);display:grid;place-items:center}
+.x:hover{border-color:var(--ink);color:var(--ink)}
+.mbody{overflow-y:auto;padding:18px 19px}
+.step{display:flex;align-items:center;gap:9px;margin:18px 0 9px}.step:first-child{margin-top:0}
+.step .num{height:24px;width:24px;border-radius:6px;background:var(--ink);color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;display:grid;place-items:center}
+.step span{font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--ink)}
+.pick{width:100%;text-align:left;border:1px solid var(--line);border-radius:9px;padding:11px 12px;background:var(--surface);cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:8px;font-family:inherit;transition:.12s}
+.pick:hover{border-color:var(--line2);background:#f7f9fb}
+.pick.sel{border-color:var(--blue);background:#f0f7fd}
+.radio{height:20px;width:20px;border-radius:6px;border:1.5px solid var(--line2);display:grid;place-items:center;flex:0 0 auto;color:#fff}
+.pick.sel .radio{background:var(--blue);border-color:var(--blue)}
+.pname{font-family:var(--mono);font-weight:600;color:var(--ink);font-size:13.5px}
+.pmeta{font-size:12px;color:var(--muted)}
+.notice{display:flex;gap:9px;border:1px solid #d9ccf7;background:#f5f1fe;color:#5b21b6;border-radius:9px;padding:11px 12px;font-size:13px;line-height:1.5;margin-bottom:4px}
+.mfoot{padding:15px 19px;border-top:1px solid var(--line)}
+.confirm{width:100%;border-radius:9px;padding:13px;font-weight:700;font-size:14px;color:#fff;background:var(--blue);border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--sans)}
+.confirm:hover{background:var(--blue-d)}.confirm:disabled{background:#aeb8c5;cursor:not-allowed}
+.photopick{display:flex;align-items:center;gap:11px}
+.photoprev{height:46px;width:46px;border-radius:8px;object-fit:cover;border:1px solid var(--line2)}
+.lockwrap{max-width:360px;margin:64px auto;text-align:center}
+.lockwrap .circle{height:54px;width:54px;border-radius:10px;background:var(--ink);color:#fff;display:grid;place-items:center;margin:0 auto 16px}
+.confcircle{height:50px;width:50px;border-radius:10px;display:grid;place-items:center;margin:0 auto;background:#ebf5fc;color:var(--sky)}
+.confcircle.danger{background:#fdeef0;color:var(--rose)}
+
+/* A6 label preview */
+.labtag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:center;margin:0 0 14px}
+.labelwrap{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+@media(max-width:560px){.labelwrap{grid-template-columns:1fr}}
+.a6{aspect-ratio:105/148;border:1px solid var(--line2);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.a6 .a6h{background:var(--ink);color:#fff;padding:11px 12px}
+.a6 .a6lib{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:-.01em}
+.a6 .a6dep{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:3px}
+.a6 .a6body{flex:1;padding:13px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px}
+.a6 .a6no{font-family:var(--mono);font-weight:600;font-size:32px;color:var(--ink);line-height:1}
+.a6 .a6mn{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--ink)}
+.a6 .a6qr{width:104px;height:104px}
+.a6 .a6cap{font-size:10px;color:var(--muted);line-height:1.45}
+.a6 .a6foot{font-family:var(--mono);font-size:8px;color:var(--faint);text-align:center;padding:9px;border-top:1px dashed var(--line2)}
+.a6 .wline{border-bottom:1px solid var(--line2);height:20px;width:100%}
+.a6 .wlab{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:-6px}
+
+/* motion */
+@keyframes pop{from{transform:translateY(12px) scale(.99);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.anim-in{animation:fadeUp .34s cubic-bezier(.2,.7,.3,1) both}
+.stagger>.card{animation:fadeUp .42s cubic-bezier(.2,.7,.3,1) both}
+.stagger>.card:nth-child(1){animation-delay:.03s}.stagger>.card:nth-child(2){animation-delay:.07s}
+.stagger>.card:nth-child(3){animation-delay:.11s}.stagger>.card:nth-child(4){animation-delay:.15s}
+.stagger>.card:nth-child(5){animation-delay:.19s}.stagger>.card:nth-child(6){animation-delay:.23s}
+.stagger>.card:nth-child(7){animation-delay:.27s}.stagger>.card:nth-child(8){animation-delay:.31s}
+.stagger>.card:nth-child(n+9){animation-delay:.34s}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+
+/* toast */
+.toast{position:fixed;left:0;right:0;bottom:22px;display:flex;justify-content:center;padding:0 16px;z-index:60;pointer-events:none}
+.toastbox{pointer-events:auto;display:flex;gap:10px;align-items:flex-start;background:var(--ink);color:#fff;border-radius:10px;padding:12px 15px;font-size:13.5px;max-width:460px;box-shadow:0 16px 40px -14px rgba(0,0,0,.55);line-height:1.4;animation:pop .2s ease}
+.toastbox.sx{background:var(--violet)}.toastbox.err{background:var(--rose)}
+.toastbox svg{flex:0 0 auto;margin-top:1px}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="confirm-root"></div>
+<div id="toast-root"></div>
+<input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display:none">
+
+<script>
+/* ---------------- backend config ---------------- */
+const CONFIG={API_URL:""};   // <-- paste your Apps Script /exec URL here to go live; blank = demo
+const DEMO=!CONFIG.API_URL;
+
+/* ---------------- icons ---------------- */
+const I={
+ pkg:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+ device:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8"/><circle cx="12" cy="16.5" r="2"/></svg>',
+ deviceBig:'<svg width="66" height="66" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8"/><circle cx="12" cy="16.5" r="2"/></svg>',
+ search:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+ swap:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4M4 7h16m-4 14 4-4-4-4M20 17H4"/></svg>',
+ settings:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+ plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>',
+ back:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20v-7a4 4 0 0 0-4-4H4m5 5-5-5 5-5"/></svg>',
+ x:'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+ check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+ chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+ repeat:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+ pin:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+ trash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+ edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+ reset:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+ collect:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+ lock:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+ upload:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>',
+ download:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+ sheet:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></svg>'
+};
+
+I.label='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3M21 14v3M17 17v4M14 21h3M21 21v.01"/></svg>';
+I.print='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>';
+I.scan='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg>';
+I.clock='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+/* ---------------- reference + seed ---------------- */
+const WARDS=["Bernard Sunley","David Ferrier","Victor Horsley","Nuffield","Chandler","Molly Lane Fox","ITU","Theatres Recovery","Lysholm","Day Care"];
+function seedData(){
+  const models=[
+    {id:"m1",name:"Alaris GP infusion pump",type:"Infusion pump",ref:"INF-01",category:"Standard",photo:""},
+    {id:"m2",name:"Alaris syringe driver",type:"Syringe driver",ref:"SYR-02",category:"Standard",photo:""},
+    {id:"m3",name:"Philips patient monitor",type:"Patient monitor",ref:"MON-03",category:"Standard",photo:""},
+    {id:"m4",name:"Portable suction unit",type:"Suction unit",ref:"SUC-04",category:"Standard",photo:""},
+    {id:"m5",name:"Nebuliser unit",type:"Nebuliser",ref:"NEB-05",category:"Standard",photo:""},
+    {id:"m6",name:"Bladder scanner",type:"Bladder scanner",ref:"BLD-06",category:"Service Exchange",photo:""},
+  ];
+  models.forEach((m,i)=>{m.number=i+1;});
+  const counts={m1:6,m2:4,m3:3,m4:4,m5:3,m6:2}; const assets=[]; let n=10001;
+  models.forEach(m=>{for(let i=0;i<counts[m.id];i++)assets.push({assetNumber:"A-"+String(n++).padStart(5,"0"),model:m.name,status:"Available",location:"Equipment Library",owningWard:"",decontaminated:false,collectionLocation:""});});
+  const loans=[];
+  function sl(an,ward,status,days,ready){const a=assets.find(x=>x.assetNumber===an);if(!a)return;a.status=status;a.location=ward;if(ready){a.decontaminated=true;a.collectionLocation=ward+" — clean utility";}
+    loans.push({id:"L-"+an,assetNumber:an,model:a.model,ward,loanType:"Standard",handledByRole:"Porter",note:"",loanedAt:Date.now()-days*864e5,returnedAt:null,collectionReadyAt:ready?Date.now()-36e5:null,collectionLocation:ready?ward+" — clean utility":"",decontaminated:!!ready});}
+  sl("A-10001","Victor Horsley","On Loan",2,false);
+  sl("A-10002","ITU","Awaiting Collection",4,true);
+  sl("A-10011","Nuffield","On Loan",1,false);
+  return {models,assets,loans};
+}
+
+/* ---------------- state ---------------- */
+let data=DEMO?seedData():{models:[],assets:[],loans:[]};
+let tab="desk", manageSub="assets", manageUnlocked=false, deskQuery="", mgQuery="", activeQuery="";
+let anim=true;
+let lastStaff={role:"Porter"};
+let modal=null;                 // loan/return
+let modelEditor=null;           // {mode:'add'|'edit', id}
+let editorCat="Standard", editorPhoto="";
+let confirmCb=null;
+
+/* ---------------- helpers ---------------- */
+const BASE_URL="https://nhnn-equip.pages.dev/"; // <-- set to your deployed URL
+const p2=n=>String(n).padStart(2,"0");
+const nextModelNumber=()=>{let m=0;data.models.forEach(x=>{if((x.number||0)>m)m=x.number;});return m+1;};
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const av=name=>data.assets.filter(a=>a.model===name&&a.status==="Available").length;
+const openLoans=name=>data.loans.filter(l=>l.model===name&&!l.returnedAt&&l.loanType!=="Service Exchange");
+function nextNum(){let max=0;data.assets.forEach(a=>{const m=String(a.assetNumber||"").match(/(\d+)\s*$/);if(m){const v=+m[1];if(v>max)max=v;}});return "A-"+String(max+1).padStart(5,"0");}
+function timeAgo(ts){const d=Math.floor((Date.now()-ts)/864e5);return d<=0?"today":d===1?"1 day ago":d+" days ago";}
+const stCls=s=>({"Available":"s-Available","On Loan":"s-OnLoan","Awaiting Collection":"s-Awaiting"}[s]||"s-Available");
+function toast(msg,kind){const r=document.getElementById("toast-root");r.innerHTML='<div class="toast"><div class="toastbox '+(kind||"")+'">'+I.check+'<span>'+esc(msg)+'</span></div></div>';clearTimeout(window.__t);window.__t=setTimeout(()=>r.innerHTML="",3600);}
+const val=id=>{const e=document.getElementById(id);return e?e.value:"";};
+function resizeImage(file,cb){const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const max=560,sc=Math.min(1,max/Math.max(img.width,img.height));const cv=document.createElement("canvas");cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);cb(cv.toDataURL("image/jpeg",.72));};img.src=r.result;};r.readAsDataURL(file);}
+
+/* ---------------- backend API ---------------- */
+async function apiGet(){const r=await fetch(CONFIG.API_URL+"?action=data&t="+Date.now());return await r.json();}
+async function persist(action,payload){
+  if(DEMO)return;
+  try{
+    const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({action},payload))});
+    const j=await r.json(); if(j&&j.ok&&j.data){data=j.data;render();return;}
+  }catch(e){}
+    try{data=await apiGet();render();}catch(e){}
+}
+async function boot(){
+  if(DEMO){data=seedData();render();return;}
+  document.getElementById("app").innerHTML='<div style="padding:64px;text-align:center;color:#5d6b7e;font-family:system-ui">Loading the library…</div>';
+  try{data=await apiGet();}catch(e){data={models:[],assets:[],loans:[]};}
+  render();
+}
+
+/* ---------------- render shell ---------------- */
+function render(){
+  document.getElementById("app").innerHTML=`
+  <header><div class="wrap hbar">
+    <div class="brand"><div class="logo">${I.pkg}</div>
+      <div><div class="title">NHNN Equipment Library</div><div class="sub">Biomedical Engineering</div></div></div>
+    <nav>
+      <button class="tab ${tab==="desk"?"active":""}" onclick="setTab('desk')">${I.swap}<span>Loan &amp; Return</span></button>
+      <button class="tab ${tab==="active"?"active":""}" onclick="setTab('active')">${I.clock}<span>On loan</span></button>
+      <button class="tab ${tab==="awaiting"?"active":""}" onclick="setTab('awaiting')">${I.collect}<span>Awaiting</span></button>
+      <button class="tab ${tab==="manage"?"active":""}" onclick="setTab('manage')">${I.settings}<span>Manage</span></button>
+    </nav>
+  </div></header>
+  <div class="manifest"><div class="wrap mfrow">${renderStats()}</div></div>
+  <main><div class="wrap" id="view"></div></main>`;
+  renderView();
+}
+function renderStats(){
+  const t={total:data.assets.length,"Available":0,"On Loan":0,"Awaiting Collection":0};
+  data.assets.forEach(a=>t[a.status]=(t[a.status]||0)+1);
+  const it=(n,lbl,cls)=>`<div class="mf"><span class="n">${p2(n)}</span><span class="l ${cls||""}">${lbl}</span></div>`;
+  return it(t.total,"In service","")+it(t["Available"],"Available","l-green")+it(t["On Loan"],"On loan","l-amber")+it(t["Awaiting Collection"],"Awaiting","l-sky");
+}
+function renderView(){
+  const v=document.getElementById("view");
+  if(tab==="active")renderActive();
+  else if(tab==="awaiting")renderAwaiting();
+  else if(tab==="manage")manageUnlocked?renderManage():renderLock();
+  else renderDesk();
+  if(anim&&tab!=="desk"){v.classList.add("anim-in");v.addEventListener("animationend",function h(){v.classList.remove("anim-in");v.removeEventListener("animationend",h);});}
+  anim=false;
+}
+
+/* ---------------- desk ---------------- */
+function renderDesk(){
+  document.getElementById("view").innerHTML=`
+    <div class="row"><div><div class="eyebrow">Loan &amp; return</div><h1>Scan or select a device</h1></div>
+      <div class="search scan"><span class="si">${I.scan}</span><input id="dq" placeholder="Scan or type an asset number…" value="${esc(deskQuery)}" autocomplete="off"></div></div>
+    <div id="grid"></div>
+    <div class="demohint">Scan a device's QR/label to loan or return it directly · demo data resets on refresh.</div>`;
+  const _i=document.getElementById("dq");
+  _i.addEventListener("input",e=>{deskQuery=e.target.value;renderGrid();});
+  _i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();renderGrid();}});
+  renderGrid();
+}
+function renderGrid(){
+  const raw=deskQuery.trim(), q=raw.toLowerCase();
+  const g=document.getElementById("grid");
+  if(raw){
+    let asset=data.assets.find(a=>a.assetNumber.toLowerCase()===q);
+    if(!asset&&/\d/.test(q)){const hits=data.assets.filter(a=>a.assetNumber.toLowerCase().includes(q));if(hits.length===1)asset=hits[0];}
+    if(asset){g.className="";g.innerHTML=assetFocusHTML(asset);return;}
+  }
+  const models=data.models.filter(m=>!q||(m.name+" "+m.type+" "+m.ref).toLowerCase().includes(q));
+  if(!models.length){g.className="";g.innerHTML=emptyHTML(I.search,raw?`No match for \u201c${esc(raw)}\u201d`:"No devices",raw?"Scan a device label, or search by model name or asset number.":"Add a model in Manage.");return;}
+  g.className="grid"+(anim?" stagger":"");
+  g.innerHTML=models.map(m=>{
+    const a=av(m.name),open=openLoans(m.name).length,isSX=m.category==="Service Exchange";
+    return `<div class="card">
+      <div class="cphoto ${m.photo?"":"empty"}">${m.photo?`<img src="${m.photo}" alt="">`:I.deviceBig}
+        <span class="cnum">#${p2(m.number||0)}</span>
+        ${isSX?`<span class="sxtag badge b-sx">${I.repeat} SX</span>`:""}</div>
+      <div class="cbody">
+        <div class="mname">${esc(m.name)}</div>
+        <div class="mmeta">${esc(m.type)} · ${esc(m.ref)}</div>
+        <div class="avl"><span class="n" style="color:${a>0?"var(--green)":"var(--faint)"}">${p2(a)}</span><small>available</small></div>
+      </div>
+      <div class="cbtns">
+        <button class="btn btn-primary" ${a===0?"disabled":""} onclick="openModal('loan','${m.id}')">${a===0?"None available":I.plus+" Loan"}</button>
+        ${open>0?`<button class="btn btn-return btn-sm" onclick="openModal('return','${m.id}')">${I.back} Return <span class="mini">${open}</span></button>`:""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function assetFocusHTML(asset){
+  const model=data.models.find(m=>m.name===asset.model)||{id:"",number:0,photo:""};
+  const st=asset.status;let action="";
+  if(st==="Available")action=`<button class="btn btn-primary" onclick="openModal('loan','${model.id}','${esc(asset.assetNumber)}')">${I.plus} Loan this device</button>`;
+  else if(st==="On Loan"){const loan=data.loans.find(l=>l.assetNumber===asset.assetNumber&&!l.returnedAt);action=loan?`<button class="btn btn-return" onclick="openModal('return','${model.id}','${loan.id}')">${I.back} Return this device</button>`:"";}
+  else if(st==="Awaiting Collection")action=`<button class="btn btn-return" onclick="collectReturn('${esc(asset.assetNumber)}')">${I.collect} Collected &amp; return</button>`;
+  return `<div class="focus">
+    <div class="focusphoto ${model.photo?"":"empty"}">${model.photo?`<img src="${model.photo}" alt="">`:I.deviceBig}<span class="cnum">#${p2(model.number||0)}</span></div>
+    <div class="focusbody"><div class="eyebrow">Scanned device</div>
+      <div class="focusno">${esc(asset.assetNumber)}</div>
+      <div class="focusmodel">${esc(asset.model)} <span class="mono">#${p2(model.number||0)}</span></div>
+      <div class="focusmeta"><span class="schip ${stCls(st)}"><span class="dot"></span>${esc(st)}</span><span>${esc(asset.location)}</span></div>
+      <div class="focusact">${action}<button class="btn btn-ghost" onclick="clearScan()">Back to all devices</button></div>
+    </div></div>`;
+}
+function clearScan(){deskQuery="";const i=document.getElementById("dq");if(i){i.value="";i.focus();}renderGrid();}
+
+/* ---------------- loan / return modal ---------------- */
+function openModal(mode,modelId,presetId){
+  modal={mode,modelId,pick:presetId||null,role:lastStaff.role||"Porter"};
+  const model=data.models.find(m=>m.id===modelId);
+  const isLoan=mode==="loan",isSX=model.category==="Service Exchange";
+  let raw=isLoan?data.assets.filter(a=>a.model===model.name&&a.status==="Available"):openLoans(model.name);
+  if(presetId)raw=raw.filter(c=>(isLoan?c.assetNumber:c.id)===presetId);
+  modal.choices=raw.map(c=>isLoan?{id:c.assetNumber,assetNumber:c.assetNumber}:{id:c.id,assetNumber:c.assetNumber,ward:c.ward,loanedAt:c.loanedAt,collectionReadyAt:c.collectionReadyAt,decontaminated:c.decontaminated});
+  const showSearch=!presetId&&modal.choices.length>1;
+  document.getElementById("modal-root").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <div class="mhead"><div><div class="eyebrow">${isLoan?"Loan device":"Return device"}</div><div style="font-weight:800;color:var(--s900);font-size:16px">${esc(model.name)}</div></div>
+      <button class="x" onclick="closeModal()">${I.x}</button></div>
+    <div class="mbody">
+      ${isLoan&&isSX?`<div class="notice">${I.repeat}<span>Service exchange — once loaned, this device <b>leaves the library for good</b>. It's removed from stock and we email you to update the equipment records.</span></div>`:""}
+      <div class="step"><span class="num">1</span><span>${presetId?"Device":(isLoan?"Choose a device":"Choose the loan to close")}</span></div>
+      ${showSearch?`<div class="search scan modalsearch"><span class="si">${I.scan}</span><input id="mPickQ" placeholder="Scan or filter by asset number…" autocomplete="off"></div>`:""}
+      <div id="mPickList" style="max-height:210px;overflow-y:auto;padding-right:2px"></div>
+      ${isLoan?`<div class="step"><span class="num">2</span><span>Destination ward</span></div>
+        <select id="mWard"><option value="">Select a ward…</option>${WARDS.map(w=>`<option>${esc(w)}</option>`).join("")}</select>`:""}
+      <div class="step"><span class="num">${isLoan?"3":"2"}</span><span>${isLoan?"Loaned by":"Returned by"}</span></div>
+      <div class="toggle"><button class="tg ${modal.role==="Biomed"?"on":""}" data-role="Biomed" onclick="setRole('Biomed')">Biomed</button>
+        <button class="tg ${modal.role==="Porter"?"on":""}" data-role="Porter" onclick="setRole('Porter')">Porter</button></div>
+      <input class="tinput" id="mNote" placeholder="Note (optional)" style="margin-top:9px">
+    </div>
+    <div class="mfoot"><button class="confirm" id="mGo" style="${isSX&&isLoan?"background:linear-gradient(180deg,#9061f0,#7c3aed)":""}" disabled onclick="submitModal()">${isLoan?"Confirm loan":"Confirm return"} ${I.chev}</button></div>
+  </div></div>`;
+  if(isLoan)document.getElementById("mWard").addEventListener("change",upd);
+  const pq=document.getElementById("mPickQ");if(pq){pq.addEventListener("input",renderPickList);pq.addEventListener("keydown",pickKey);}
+  renderPickList();upd();
+}
+function pickItem(id){modal.pick=id;document.querySelectorAll(".pick").forEach(el=>el.classList.toggle("sel",el.dataset.id===id));upd();}
+function renderPickList(){
+  const el=document.getElementById("mPickList");if(!el||!modal||!modal.choices)return;
+  const isLoan=modal.mode==="loan";
+  const qe=document.getElementById("mPickQ");const q=(qe?qe.value:"").trim().toLowerCase();
+  if(!modal.choices.length){el.innerHTML=`<p style="font-size:13.5px;color:var(--muted);padding:2px">Nothing to ${isLoan?"loan":"return"} for this model.</p>`;return;}
+  const list=modal.choices.filter(c=>!q||c.assetNumber.toLowerCase().includes(q)||(!isLoan&&(c.ward||"").toLowerCase().includes(q)));
+  if(!list.length){el.innerHTML=`<p style="font-size:13.5px;color:var(--muted);padding:2px">No device matches that.</p>`;return;}
+  el.innerHTML=list.map(c=>{const ready=!isLoan&&c.collectionReadyAt;
+    return `<button class="pick ${c.id===modal.pick?"sel":""}" data-id="${esc(c.id)}" onclick="pickItem('${esc(c.id)}')"><span class="radio">${I.check}</span>
+      <span style="min-width:0;flex:1"><span class="pname">${esc(c.assetNumber)}</span><span class="pmeta" style="display:block">${isLoan?"In the library":esc(c.ward)+" · loaned "+timeAgo(c.loanedAt)}</span></span>
+      ${ready?`<span class="badge b-ready">${I.pin} Ready${c.decontaminated?" · clean":""}</span>`:""}</button>`;}).join("");
+}
+function pickKey(e){if(e.key!=="Enter")return;e.preventDefault();const isLoan=modal.mode==="loan";const q=e.target.value.trim().toLowerCase();const list=modal.choices.filter(c=>!q||c.assetNumber.toLowerCase().includes(q)||(!isLoan&&(c.ward||"").toLowerCase().includes(q)));if(list.length===1)pickItem(list[0].id);}
+function setRole(r){modal.role=r;document.querySelectorAll("[data-role]").forEach(el=>el.classList.toggle("on",el.dataset.role===r));}
+function upd(){const isLoan=modal.mode==="loan";const ward=isLoan?val("mWard"):"x";document.getElementById("mGo").disabled=!(modal.pick&&ward&&modal.role);}
+function closeModal(){modal=null;document.getElementById("modal-root").innerHTML="";}
+function submitModal(){
+  const model=data.models.find(m=>m.id===modal.modelId),role=modal.role,note=val("mNote").trim();
+  if(modal.mode==="loan"){
+    const ward=val("mWard"),isSX=model.category==="Service Exchange";
+    if(isSX){
+      data.assets=data.assets.filter(a=>a.assetNumber!==modal.pick);
+      data.loans.unshift({id:"L-"+Date.now(),assetNumber:modal.pick,model:model.name,ward,loanType:"Service Exchange",handledByRole:role,note,loanedAt:Date.now(),returnedAt:Date.now(),collectionReadyAt:null,collectionLocation:"",decontaminated:false});
+      toast(`${modal.pick} sent to ${ward} as service exchange — removed from stock. Email sent to update records.`,"sx");persist("loan",{assetNumber:modal.pick,model:model.name,ward,role,note,loanType:"Service Exchange"});
+    }else{
+      data.assets=data.assets.map(a=>a.assetNumber===modal.pick?{...a,status:"On Loan",location:ward}:a);
+      data.loans.unshift({id:"L-"+Date.now(),assetNumber:modal.pick,model:model.name,ward,loanType:"Standard",handledByRole:role,note,loanedAt:Date.now(),returnedAt:null,collectionReadyAt:null,collectionLocation:"",decontaminated:false});
+      toast(`${modal.pick} loaned to ${ward}.`);persist("loan",{assetNumber:modal.pick,model:model.name,ward,role,note,loanType:"Standard"});
+    }
+  }else{
+    const loan=data.loans.find(l=>l.id===modal.pick);if(!loan){closeModal();return;}
+    data.loans=data.loans.map(l=>l.id===modal.pick?{...l,returnedAt:Date.now(),returnedByRole:role,returnNote:note}:l);
+    data.assets=data.assets.map(a=>a.assetNumber===loan.assetNumber?{...a,status:"Available",location:"Equipment Library",decontaminated:false,collectionLocation:""}:a);
+    toast(`${loan.assetNumber} returned to the library.`);persist("return",{assetNumber:loan.assetNumber,role,note});
+  }
+  lastStaff={role};closeModal();render();
+}
+
+/* ---------------- active loans ---------------- */
+function renderActive(){
+  const all=data.assets.filter(a=>a.status==="On Loan");
+  document.getElementById("view").innerHTML=`
+    <div class="row"><div><div class="eyebrow">Out of the library</div><h1>On loan</h1></div>
+      ${all.length?`<div class="search scan"><span class="si">${I.scan}</span><input id="aq2" placeholder="Scan or search on-loan devices…" value="${esc(activeQuery)}" autocomplete="off"></div>`:""}</div>
+    <div class="panel"><div id="activeList" style="max-height:72vh;overflow-y:auto"></div></div>`;
+  const i=document.getElementById("aq2");if(i)i.addEventListener("input",e=>{activeQuery=e.target.value;renderActiveList();});
+  renderActiveList();
+}
+function renderActiveList(){
+  const q=activeQuery.trim().toLowerCase();
+  const items=data.assets.filter(a=>a.status==="On Loan"&&(!q||(a.assetNumber+" "+a.model+" "+a.location).toLowerCase().includes(q)));
+  const el=document.getElementById("activeList");if(!el)return;
+  if(!items.length){el.innerHTML=emptyHTML(I.clock,q?"No match":"Nothing on loan",q?"Try another asset number or ward.":"Devices you loan out will show here with their current location.");return;}
+  el.innerHTML=items.map(a=>{
+    const m=data.models.find(x=>x.name===a.model);
+    const loan=data.loans.find(l=>l.assetNumber===a.assetNumber&&!l.returnedAt);
+    return `<div class="litem"><div class="thumb">${m&&m.photo?`<img src="${m.photo}">`:I.device}</div>
+      <div style="min-width:0;flex:1"><div class="mono" style="font-weight:700;color:var(--ink);font-size:14px">${esc(a.assetNumber)}</div>
+        <div class="mmeta" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.model)}${m?" · #"+p2(m.number||0):""}${loan?" · loaned "+timeAgo(loan.loanedAt):""}</div></div>
+      <span class="loc">${I.pin} ${esc(a.location)}</span>
+      ${loan?`<button class="btn btn-return btn-sm" style="flex:0 0 auto" onclick="openModal('return','${m?m.id:""}','${loan.id}')">${I.back} Return</button>`:""}</div>`;
+  }).join("");
+}
+/* ---------------- awaiting collection ---------------- */
+function renderAwaiting(){
+  const items=data.assets.filter(a=>a.status==="Awaiting Collection");
+  const body=items.length?items.map(a=>{const m=data.models.find(x=>x.name===a.model);
+    const loan=data.loans.find(l=>l.assetNumber===a.assetNumber&&!l.returnedAt);
+    const act=loan&&m?`openModal('return','${m.id}','${loan.id}')`:`collectReturn('${esc(a.assetNumber)}')`;
+    return `<div class="litem"><div class="thumb">${m&&m.photo?`<img src="${m.photo}">`:I.device}</div>
+      <div style="min-width:0;flex:1"><div class="mono" style="font-weight:700;color:var(--s900);font-size:14px">${esc(a.assetNumber)}</div>
+        <div class="mmeta" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.model)} · at ${esc(a.collectionLocation||a.location)}</div></div>
+      <span class="schip ${a.decontaminated?"s-Available":"s-OnLoan"}"><span class="dot"></span>${a.decontaminated?"Decontaminated":"Not decontaminated"}</span>
+      <button class="btn btn-return btn-sm" style="flex:0 0 auto" onclick="${act}">${I.back} Collect &amp; return</button></div>`;
+  }).join(""):emptyHTML(I.collect,"Nothing awaiting collection","When a ward scans a device label as ready, it appears here with its location.");
+  document.getElementById("view").innerHTML=`<div class="row"><h1>Awaiting collection</h1></div><div class="panel"><div style="max-height:72vh;overflow-y:auto">${body}</div></div>`;
+}
+function collectReturn(an){
+  const loan=data.loans.find(l=>l.assetNumber===an&&!l.returnedAt);
+  if(loan)data.loans=data.loans.map(l=>l.id===loan.id?{...l,returnedAt:Date.now(),returnedByRole:lastStaff.role}:l);
+  data.assets=data.assets.map(a=>a.assetNumber===an?{...a,status:"Available",location:"Equipment Library",decontaminated:false,collectionLocation:""}:a);
+  toast(`${an} collected and returned.`);persist("return",{assetNumber:an,role:lastStaff.role});render();
+}
+
+/* ---------------- manage (locked) ---------------- */
+function renderLock(){
+  document.getElementById("view").innerHTML=`<div class="lockwrap"><div class="circle">${I.lock}</div>
+    <h1 style="margin-bottom:6px">Manage is locked</h1>
+    <p style="color:var(--s500);font-size:14px;margin:0 0 4px">Enter the passcode to add, edit or remove equipment.</p>
+    <input class="tinput" id="pc" type="password" inputmode="numeric" placeholder="Passcode" style="text-align:center;letter-spacing:5px;font-size:18px;margin:10px 0" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="btn btn-primary" style="width:100%" onclick="tryUnlock()">Unlock</button>
+    <p id="pcErr" style="color:var(--rose);font-size:13px;height:16px;margin:9px 0 0"></p></div>`;
+  setTimeout(()=>{const e=document.getElementById("pc");if(e)e.focus();},40);
+}
+function tryUnlock(){if(val("pc").trim()==="2022"){manageUnlocked=true;anim=true;render();}else{document.getElementById("pcErr").textContent="Incorrect passcode.";document.getElementById("pc").value="";}}
+
+function renderManage(){
+  document.getElementById("view").innerHTML=`
+    <div class="row"><h1>Manage equipment</h1>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="subtabs"><button class="subtab ${manageSub==="assets"?"on":""}" onclick="setSub('assets')">Devices</button>
+          <button class="subtab ${manageSub==="models"?"on":""}" onclick="setSub('models')">Models</button></div>
+        <button class="btn btn-ghost btn-sm" onclick="askReset()">${I.reset} Reset</button>
+      </div></div><div id="mg"></div>`;
+  manageSub==="assets"?renderAssets():renderModels();
+}
+
+/* ----- manage: devices + import/export ----- */
+function renderAssets(){
+  document.getElementById("mg").innerHTML=`
+  <div class="mgrid">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="panel pad"><h2>Add a device</h2>
+        <div class="field"><label class="lab">Model</label><select id="aModel">${data.models.map(m=>`<option>${esc(m.name)}</option>`).join("")}</select></div>
+        <div class="field"><label class="lab">Asset label / number</label>
+          <div class="inline"><input class="tinput mono" id="aNum" value="${nextNum()}">
+            <button class="btn btn-ghost" onclick="document.getElementById('aNum').value=nextNum()">Auto</button></div>
+          <p class="hint">Auto continues from the highest existing number.</p></div>
+        <button class="btn btn-primary" style="width:100%" onclick="addAsset()">${I.plus} Add device</button>
+      </div>
+      <div class="panel pad"><h2>Import / export</h2>
+        <button class="btn btn-primary" style="width:100%;margin-bottom:9px" onclick="document.getElementById('importFile').click()">${I.upload} Import spreadsheet</button>
+        <div class="inline"><button class="btn btn-ghost" style="flex:1" onclick="downloadTemplate()">${I.sheet} Template</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="exportData()">${I.download} Export</button></div>
+        <p class="hint">Spreadsheet columns (first sheet): <b>AssetNumber, Model, Type, Ref, Category</b> — one row per device. Models are created automatically; duplicate labels are skipped. .xlsx or .csv.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="listhead"><div class="search"><span class="si">${I.search}</span><input id="mq" placeholder="Search devices…" value="${esc(mgQuery)}"></div></div>
+      <div id="aList" style="max-height:64vh;overflow-y:auto"></div>
+    </div>
+  </div>`;
+  document.getElementById("mq").addEventListener("input",e=>{mgQuery=e.target.value;renderAssetList();});
+  renderAssetList();
+}
+function renderAssetList(){
+  const q=mgQuery.trim().toLowerCase();
+  const rows=data.assets.filter(a=>(a.assetNumber+" "+a.model+" "+a.status+" "+a.location).toLowerCase().includes(q));
+  const el=document.getElementById("aList");
+  if(!rows.length){el.innerHTML=emptyHTML(I.device,"No devices","Add one or import a spreadsheet.");return;}
+  el.innerHTML=rows.map(a=>`<div class="litem">
+    <div style="min-width:0;flex:1"><div class="mono" style="font-weight:700;color:var(--s900);font-size:14px">${esc(a.assetNumber)}</div>
+    <div class="mmeta" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.model)} · ${esc(a.location)}</div></div>
+    <span class="schip ${stCls(a.status)}"><span class="dot"></span>${esc(a.status)}</span>
+    <button class="iconbtn" title="A6 label" onclick="openAssetLabel('${esc(a.assetNumber)}')">${I.label}</button>
+    <button class="iconbtn danger" title="Remove" onclick="askRemoveAsset('${esc(a.assetNumber)}')">${I.trash}</button></div>`).join("");
+}
+function addAsset(){
+  const model=val("aModel"),num=val("aNum").trim();
+  if(!num||!model)return;
+  if(data.assets.some(a=>a.assetNumber.toLowerCase()===num.toLowerCase())){toast("That asset number already exists.","err");return;}
+  data.assets.unshift({assetNumber:num,model,status:"Available",location:"Equipment Library",owningWard:"",decontaminated:false,collectionLocation:""});
+  toast(`${num} added.`);persist("addAsset",{assetNumber:num,model});render();
+}
+function askRemoveAsset(an){askConfirm(`Remove device ${an}?`,()=>{data.assets=data.assets.filter(a=>a.assetNumber!==an);data.loans=data.loans.filter(l=>l.assetNumber!==an);toast(`${an} removed.`);persist("removeAsset",{assetNumber:an});render();},true);}
+
+/* ----- manage: models (add / edit / delete) ----- */
+function renderModels(){
+  document.getElementById("mg").innerHTML=`
+  <div class="panel">
+    <div class="listhead" style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700;color:var(--s900)">Models</span>
+      <button class="btn btn-primary btn-sm" onclick="openModelEditor('add')">${I.plus} Add model</button></div>
+    <div style="max-height:66vh;overflow-y:auto">${data.models.map(m=>`<div class="litem">
+        <div class="thumb">${m.photo?`<img src="${m.photo}">`:I.device}</div>
+        <div style="min-width:0;flex:1"><div style="font-family:var(--disp);font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.name)} <span class="mono" style="color:var(--muted);font-size:15px;font-weight:600">#${p2(m.number||0)}</span></div>
+          <div class="mmeta">${esc(m.type)} · ${esc(m.ref)} · ${p2(av(m.name))} available</div></div>
+        ${m.category==="Service Exchange"?`<span class="badge b-sx">${I.repeat} SX</span>`:""}
+        <button class="iconbtn" title="Edit" onclick="openModelEditor('edit','${m.id}')">${I.edit}</button>
+        <button class="iconbtn danger" title="Delete" onclick="askRemoveModel('${m.id}')">${I.trash}</button></div>`).join("")}</div>
+  </div>`;
+}
+function openModelEditor(mode,id){
+  const m=id?data.models.find(x=>x.id===id):null;
+  modelEditor={mode,id:id||null};editorCat=m?m.category:"Standard";editorPhoto=m?(m.photo||""):"";
+  document.getElementById("modal-root").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <div class="mhead"><div><div class="eyebrow">${mode==="add"?"New model":"Edit model"}</div>
+      <div style="font-weight:800;color:var(--s900);font-size:16px">${mode==="add"?"Add a model":esc(m.name)}</div></div>
+      <button class="x" onclick="closeModal()">${I.x}</button></div>
+    <div class="mbody">
+      <div class="field"><label class="lab">Model name</label><input class="tinput" id="emName" value="${m?esc(m.name):""}" placeholder="e.g. Alaris GP infusion pump"></div>
+      <div class="field"><label class="lab">Model number (shown on the label)</label><input class="tinput mono" id="emNum" inputmode="numeric" value="${m?(m.number||""):nextModelNumber()}" placeholder="e.g. 7"></div>
+      <div class="field"><label class="lab">Device type</label><input class="tinput" id="emType" value="${m?esc(m.type):""}" placeholder="e.g. Infusion pump"></div>
+      <div class="field"><label class="lab">Reference</label><input class="tinput" id="emRef" value="${m?esc(m.ref):""}" placeholder="e.g. INF-07"></div>
+      <div class="field"><label class="lab">Photo (shown big on the main page)</label>
+        <div class="photopick"><label class="btn btn-ghost btn-sm" style="cursor:pointer">${I.upload} Choose photo<input type="file" accept="image/*" style="display:none" onchange="editorPick(event)"></label>
+          <img id="emPrev" class="photoprev" src="${editorPhoto}" style="${editorPhoto?"":"display:none"}"></div></div>
+      <label class="lab">Loan category</label>
+      <div class="toggle"><button class="tg ${editorCat==="Standard"?"on":""}" data-cat="Standard" onclick="setEditorCat('Standard')">Standard</button>
+        <button class="tg ${editorCat==="Service Exchange"?"on":""}" data-cat="Service Exchange" style="${editorCat==="Service Exchange"?"background:var(--sx);color:#fff;border-color:transparent":""}" onclick="setEditorCat('Service Exchange')">Service Exchange</button></div>
+    </div>
+    <div class="mfoot"><button class="confirm" onclick="saveModel()">${mode==="add"?"Add model":"Save changes"} ${I.chev}</button></div>
+  </div></div>`;
+}
+function setEditorCat(c){editorCat=c;document.querySelectorAll("[data-cat]").forEach(el=>{const on=el.dataset.cat===c;el.classList.toggle("on",on);el.style.cssText=on&&c==="Service Exchange"?"background:var(--sx);color:#fff;border-color:transparent":"";});}
+function editorPick(e){const f=e.target.files[0];if(!f)return;resizeImage(f,d=>{editorPhoto=d;const p=document.getElementById("emPrev");if(p){p.src=d;p.style.display="block";}});}
+function saveModel(){
+  const name=val("emName").trim(),type=val("emType").trim(),ref=val("emRef").trim()||"—";
+  const num=parseInt(val("emNum"),10);
+  if(!name||!type){toast("Give the model a name and type.","err");return;}
+  if(!num||num<1){toast("Give the model a number (1 or more).","err");return;}
+  const dupNum=data.models.find(m=>m.number===num&&m.id!==(modelEditor.id||""));
+  if(dupNum){toast(`Number #${p2(num)} is already used by ${dupNum.name}.`,"err");return;}
+  if(modelEditor.mode==="add"){
+    if(data.models.some(m=>m.name.toLowerCase()===name.toLowerCase())){toast("A model with that name exists.","err");return;}
+    data.models.push({id:"m"+Date.now(),number:num,name,type,ref,category:editorCat,photo:editorPhoto});
+    toast(`${name} added to the catalogue.`);persist("saveModel",{mode:"add",number:num,name,type,ref,category:editorCat,photo:editorPhoto});
+  }else{
+    const old=data.models.find(x=>x.id===modelEditor.id),oldName=old.name;
+    data.models=data.models.map(x=>x.id===modelEditor.id?{...x,number:num,name,type,ref,category:editorCat,photo:editorPhoto}:x);
+    if(oldName!==name){data.assets=data.assets.map(a=>a.model===oldName?{...a,model:name}:a);data.loans=data.loans.map(l=>l.model===oldName?{...l,model:name}:l);}
+    toast(`${name} updated.`);persist("saveModel",{mode:"edit",key:old.number,number:num,name,type,ref,category:editorCat,photo:editorPhoto});
+  }
+  closeModal();render();
+}
+function askRemoveModel(id){
+  const m=data.models.find(x=>x.id===id);const count=data.assets.filter(a=>a.model===m.name).length;
+  if(count>0){toast(`Remove its ${count} device(s) first.`,"err");return;}
+  askConfirm(`Delete model "${m.name}"?`,()=>{data.models=data.models.filter(x=>x.id!==id);toast(`${m.name} deleted.`);persist("removeModel",{number:m.number});render();},true);
+}
+
+/* ---------------- confirm dialog ---------------- */
+function askConfirm(message,onYes,danger){
+  confirmCb=onYes;
+  document.getElementById("confirm-root").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeConfirm()"><div class="modal" style="max-width:390px">
+    <div class="mbody" style="text-align:center;padding:26px 22px 10px">
+      <div class="confcircle ${danger?"danger":""}">${danger?I.trash:I.check}</div>
+      <div style="font-weight:700;color:var(--s900);font-size:16px;margin-top:13px">${esc(message)}</div></div>
+    <div class="mfoot" style="display:flex;gap:10px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeConfirm()">Cancel</button>
+      <button class="btn ${danger?"btn-danger":"btn-primary"}" style="flex:1" onclick="confirmYes()">${danger?"Delete":"Confirm"}</button>
+    </div></div></div>`;
+}
+function confirmYes(){const cb=confirmCb;closeConfirm();if(cb)cb();}
+function closeConfirm(){confirmCb=null;document.getElementById("confirm-root").innerHTML="";}
+function askReset(){askConfirm("Reset everything to the sample data?",()=>{data=seedData();manageSub="assets";toast("Sample data restored.");render();},true);}
+
+/* ---------------- Excel / CSV import-export ---------------- */
+function field(o,names){for(const k in o){const kk=k.toLowerCase().replace(/[^a-z]/g,"");if(names.indexOf(kk)>=0)return String(o[k]==null?"":o[k]).trim();}return "";}
+function parseCSV(text){const rows=[];let i=0,f="",row=[],q=false;while(i<text.length){const c=text[i];
+  if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+  else{if(c==='"')q=true;else if(c===','){row.push(f);f="";}else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f="";}else f+=c;}i++;}
+  if(f!==""||row.length){row.push(f);rows.push(row);}return rows;}
+function rowsToObjs(rows){if(!rows.length)return[];const head=rows[0].map(h=>String(h).trim());return rows.slice(1).filter(r=>r.join("").trim()).map(r=>{const o={};head.forEach((h,i)=>o[h]=r[i]);return o;});}
+function processImport(objs){
+  let addM=0,addA=0,skip=0;
+  objs.forEach(o=>{
+    const mn=field(o,["model","modelname"]);if(!mn)return;
+    let model=data.models.find(m=>m.name.toLowerCase()===mn.toLowerCase());
+    if(!model){const cat=field(o,["category","loancategory","cat"]);model={id:"m"+Date.now()+Math.floor(Math.random()*1e4),number:nextModelNumber(),name:mn,type:field(o,["type","devicetype"]),ref:field(o,["ref","reference"])||"—",category:/serv|exch/i.test(cat)?"Service Exchange":"Standard",photo:""};data.models.push(model);addM++;}
+    const an=field(o,["assetnumber","asset","label","assetlabel","number"]);
+    if(an){if(data.assets.some(a=>a.assetNumber.toLowerCase()===an.toLowerCase()))skip++;else{data.assets.push({assetNumber:an,model:model.name,status:"Available",location:"Equipment Library",owningWard:"",decontaminated:false,collectionLocation:""});addA++;}}
+  });
+  toast(`Imported ${addA} device(s), ${addM} new model(s)`+(skip?`, ${skip} duplicate(s) skipped.`:"."));persist("replaceAll",{models:data.models,assets:data.assets});render();
+}
+function handleImport(file){
+  const name=(file.name||"").toLowerCase(),r=new FileReader();
+  if(name.endsWith(".csv")){r.onload=()=>{try{processImport(rowsToObjs(parseCSV(r.result)));}catch(e){toast("Couldn't read that CSV.","err");}};r.readAsText(file);}
+  else{if(typeof XLSX==="undefined"){toast("Excel reading isn't available here — save the file as CSV, or use the deployed app.","err");return;}
+    r.onload=()=>{try{const wb=XLSX.read(r.result,{type:"array"});const objs=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});processImport(objs);}catch(e){toast("Couldn't read that spreadsheet.","err");}};r.readAsArrayBuffer(file);}
+}
+function csvCell(v){v=String(v==null?"":v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function downloadCSV(fn,rows){const csv=rows.map(r=>r.map(csvCell).join(",")).join("\n");const b=new Blob([csv],{type:"text/csv"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=fn;a.click();URL.revokeObjectURL(u);}
+function downloadTemplate(){
+  const head=["AssetNumber","Model","Type","Ref","Category"];
+  const ex=[["A-10101","Alaris GP infusion pump","Infusion pump","INF-01","Standard"],["A-10102","Alaris GP infusion pump","Infusion pump","INF-01","Standard"],["B-2001","Bladder scanner","Bladder scanner","BLD-06","Service Exchange"]];
+  if(typeof XLSX!=="undefined"){const ws=XLSX.utils.aoa_to_sheet([head,...ex]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Equipment");XLSX.writeFile(wb,"equipment-template.xlsx");}
+  else downloadCSV("equipment-template.csv",[head,...ex]);
+  toast("Template downloaded.");
+}
+function exportData(){
+  const rows=[["AssetNumber","Model","Type","Ref","Category","Status","Location"]];
+  data.assets.forEach(a=>{const m=data.models.find(x=>x.name===a.model)||{};rows.push([a.assetNumber,a.model,m.type||"",m.ref||"",m.category||"",a.status,a.location]);});
+  if(typeof XLSX!=="undefined"){const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Equipment");XLSX.writeFile(wb,"equipment-library.xlsx");}
+  else downloadCSV("equipment-library.csv",rows);
+  toast("Exported current stock.");
+}
+
+/* ---------------- nav + misc ---------------- */
+function setTab(t){tab=t;anim=true;render();}
+function setSub(s){manageSub=s;mgQuery="";anim=true;render();}
+function emptyHTML(icon,title,hint){return `<div class="empty"><div class="circle">${icon}</div><b>${esc(title)}</b><div style="font-size:14px;margin-top:5px">${esc(hint)}</div></div>`;}
+
+/* ---------------- A6 asset label (QR + manual, double-sided) ---------------- */
+function qrSrc(text){if(typeof qrcode==="undefined")return "";try{const q=qrcode(0,"M");q.addData(text);q.make();return q.createDataURL(6,6);}catch(e){return "";}}
+function assetURL(an){return BASE_URL+"#return?a="+encodeURIComponent(an);}
+function openAssetLabel(an){
+  const asset=data.assets.find(a=>a.assetNumber===an);if(!asset)return;
+  const model=data.models.find(m=>m.name===asset.model)||{number:0,name:asset.model,type:""};
+  const qr=qrSrc(assetURL(an));
+  document.getElementById("modal-root").innerHTML=`
+  <div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:660px">
+    <div class="mhead"><div><div class="eyebrow2">A6 LABEL \u00b7 ${esc(an)}</div><div class="htitle">${esc(asset.model)}</div></div>
+      <button class="x" onclick="closeModal()">${I.x}</button></div>
+    <div class="mbody"><p class="labtag">One label per device \u2014 the QR carries this asset number, so scanning opens its details and the return &amp; decontamination form.</p>
+      <div class="labelwrap">${labelFront(asset,model,qr)}${labelBack(asset,model)}</div></div>
+    <div class="mfoot"><button class="confirm" onclick="printAssetLabel('${esc(an)}')">${I.print} Print A6 (double-sided)</button></div>
+  </div></div>`;
+}
+function labelFront(asset,model,qr){
+  return `<div class="a6"><div class="a6h"><div class="a6lib">NHNN Equipment Library</div><div class="a6dep">Biomedical Engineering \u00b7 Model #${p2(model.number||0)}</div></div>
+    <div class="a6body"><div class="a6no">${esc(asset.assetNumber)}</div><div class="a6mn">${esc(asset.model)}</div>
+      ${qr?`<img class="a6qr" src="${qr}" alt="QR">`:`<div class="a6qr" style="border:1px dashed var(--line2);display:grid;place-items:center;font-size:9px;color:var(--faint)">QR loads<br>when deployed</div>`}
+      <div class="a6cap">Finished with this device?<br>Scan for its details and to log <b>return</b> &amp; <b>decontamination</b>.</div></div>
+    <div class="a6foot">No phone? Use the slip on the back \u00b7 ext. 74321</div></div>`;
+}
+function labelBack(asset,model){
+  const line=l=>`<div><span class="wlab">${l}</span><div class="wline"></div></div>`;
+  return `<div class="a6"><div class="a6h"><div class="a6lib">Return &amp; decontamination</div><div class="a6dep">${esc(asset.assetNumber)} \u00b7 ${esc(asset.model)}</div></div>
+    <div class="a6body" style="align-items:stretch;text-align:left;gap:13px">
+      <div><span class="wlab">Ready for collection?</span><div style="font-family:var(--mono);font-size:11px;margin-top:5px">\u2610 Yes&nbsp;&nbsp;&nbsp;\u2610 No</div></div>
+      <div><span class="wlab">Decontaminated?</span><div style="font-family:var(--mono);font-size:11px;margin-top:5px">\u2610 Yes&nbsp;&nbsp;&nbsp;\u2610 No</div></div>
+      ${line("Signed off by (nurse)")}
+      ${line("Date")}</div>
+    <div class="a6foot">Hand this slip to the Equipment Library \u00b7 ext. 74321</div></div>`;
+}
+function printAssetLabel(an){
+  const asset=data.assets.find(a=>a.assetNumber===an);if(!asset)return;
+  const model=data.models.find(m=>m.name===asset.model)||{number:0,type:""};
+  const qr=qrSrc(assetURL(an));
+  const css="@page{size:A6;margin:0}*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}body{margin:0}.pg{width:105mm;height:148mm;display:flex;flex-direction:column;page-break-after:always;overflow:hidden}.h{background:#14181f;color:#fff;padding:8mm 7mm 6mm}.lib{font-size:15pt;font-weight:800}.dep{font-size:8pt;letter-spacing:1.4px;text-transform:uppercase;color:#b9c2cf;margin-top:2mm}.b{flex:1;padding:7mm;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4mm}.no{font-size:26pt;font-weight:800;font-family:monospace}.mn{font-size:12pt;font-weight:700}.qr{width:46mm;height:46mm}.cap{font-size:9pt;color:#444;line-height:1.4}.foot{font-size:7.5pt;color:#888;text-align:center;padding:5mm;border-top:1px dashed #aaa}.bl{text-align:left;padding:7mm;display:flex;flex-direction:column;gap:6mm}.ln{border-bottom:1px solid #444;height:9mm}.lb{font-size:7.5pt;letter-spacing:1px;text-transform:uppercase;color:#666}";
+  const front=`<div class="pg"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Biomedical Engineering &middot; Model #${p2(model.number||0)}</div></div><div class="b"><div class="no">${esc(asset.assetNumber)}</div><div class="mn">${esc(asset.model)}</div>${qr?`<img class="qr" src="${qr}">`:""}<div class="cap">Finished with this device?<br>Scan for its details and to log return &amp; decontamination.</div></div><div class="foot">No phone? Use the slip on the back &middot; ext. 74321</div></div>`;
+  const back=`<div class="pg"><div class="h"><div class="lib">Return &amp; decontamination</div><div class="dep">${esc(asset.assetNumber)} &middot; ${esc(asset.model)}</div></div><div class="bl"><div><div class="lb">Ready for collection?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Decontaminated?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Signed off by (nurse)</div><div class="ln"></div></div><div><div class="lb">Date</div><div class="ln"></div></div></div><div class="foot">Hand this slip to the Equipment Library &middot; ext. 74321</div></div>`;
+  const doc="<!doctype html><html><head><meta charset='utf-8'><title>A6 "+esc(an)+"</title><style>"+css+"</style></head><body>"+front+back+"<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
+  try{const w=window.open("","_blank");if(!w){toast("Allow pop-ups to print, or print from the deployed site.","err");return;}w.document.open();w.document.write(doc);w.document.close();}catch(e){toast("Print view is blocked here, works once deployed.","err");}
+}
+
+document.getElementById("importFile").addEventListener("change",e=>{const f=e.target.files[0];if(f)handleImport(f);e.target.value="";});
+boot();
+</script>
+</body>
+</html>
