@@ -300,7 +300,7 @@ let editorCat="Standard", editorPhoto="";
 let confirmCb=null;
 
 /* ---------------- helpers ---------------- */
-const BASE_URL="https://nhnn-equip.pages.dev/"; // <-- set to your deployed URL
+const BASE_URL="https://script.google.com/macros/s/AKfycbwMgfoW2BqD35nHQYTc__2slkvTUlYKRCyc30lN7I5gVTTfUk7j2UYQtqvN4eEljEM5/exec";
 const p2=n=>String(n).padStart(2,"0");
 const nextModelNumber=()=>{let m=0;data.models.forEach(x=>{if((x.number||0)>m)m=x.number;});return m+1;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -741,7 +741,7 @@ function emptyHTML(icon,title,hint){return `<div class="empty"><div class="circl
 
 /* ---------------- A6 asset label (QR + manual, double-sided) ---------------- */
 function qrSrc(text){if(typeof qrcode==="undefined")return "";try{const q=qrcode(0,"M");q.addData(text);q.make();return q.createDataURL(6,6);}catch(e){return "";}}
-function assetURL(an){return BASE_URL+"#return?a="+encodeURIComponent(an);}
+function assetURL(an){return BASE_URL+"?page=return&a="+encodeURIComponent(an);}
 function openAssetLabel(an){
   const asset=data.assets.find(a=>a.assetNumber===an);if(!asset)return;
   const model=data.models.find(m=>m.name===asset.model)||{number:0,name:asset.model,type:""};
