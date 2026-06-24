@@ -610,10 +610,11 @@ function renderManage(){
         <div class="subtabs"><button class="subtab ${manageSub==="assets"?"on":""}" onclick="setSub('assets')">Devices</button>
           <button class="subtab ${manageSub==="models"?"on":""}" onclick="setSub('models')">Models</button>
           <button class="subtab ${manageSub==="locations"?"on":""}" onclick="setSub('locations')">Locations</button>
-          <button class="subtab ${manageSub==="check"?"on":""}" onclick="setSub('check')">Check</button></div>
+          <button class="subtab ${manageSub==="check"?"on":""}" onclick="setSub('check')">Check</button>
+          <button class="subtab ${manageSub==="history"?"on":""}" onclick="setSub('history')">History</button></div>
         <button class="btn btn-ghost btn-sm" onclick="askReset()">${I.reset} Reset</button>
       </div></div><div id="mg"></div>`;
-  manageSub==="assets"?renderAssets():manageSub==="models"?renderModels():manageSub==="locations"?renderLocations():renderCheck();
+  manageSub==="assets"?renderAssets():manageSub==="models"?renderModels():manageSub==="locations"?renderLocations():manageSub==="history"?renderHistory():renderCheck();
 }
 
 /* ----- manage: devices + import/export ----- */
@@ -864,6 +865,33 @@ async function runCheck(){
   }catch(e){ L.push(chkRow(false,"Saves reach the sheet",String(e))); }
   out.innerHTML=L.join("");
   try{data=reconcile(await apiGet());lastSig=dataSig(data);}catch(e){}
+}
+function sxHistory(){
+  var a=(data.serviceExchanges||[]).map(function(x){ return {date:x.exchangedAt,asset:x.assetNumber,model:x.model,to:x.sentTo,by:x.handledBy}; });
+  var b=(data.loans||[]).filter(function(l){ return l.loanType==="Service Exchange"; }).map(function(l){ return {date:l.loanedAt,asset:l.assetNumber,model:l.model,to:l.ward,by:l.handledByRole}; });
+  return a.concat(b).sort(function(x,y){ return (y.date||0)-(x.date||0); });
+}
+function histDate(ts){ if(!ts) return "\u2014"; try{ return new Date(ts).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}); }catch(e){ return "\u2014"; } }
+function renderHistory(){
+  var all=sxHistory(), q=(mgQuery||"").toLowerCase();
+  var rows=all.filter(function(r){ return !q || ((r.asset||"")+" "+(r.model||"")+" "+(r.to||"")).toLowerCase().indexOf(q)>=0; });
+  var body = rows.length ? rows.map(function(r){
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)">
+      <div style="min-width:0"><div style="font-family:var(--mono);font-weight:700;color:var(--s900)">${esc(r.asset||"\u2014")}</div>
+        <div style="font-size:13px;color:var(--s500);margin-top:2px">${esc(r.model||"")}</div></div>
+      <div style="text-align:right;font-size:12px;color:var(--s500);white-space:nowrap">
+        <div>${esc(r.to||"\u2014")}</div>
+        <div style="margin-top:2px"><span style="font-family:var(--mono)">${esc(r.by||"\u2014")}</span> \u00b7 ${histDate(r.date)}</div></div>
+    </div>`; }).join("")
+    : `<div class="hint" style="padding:18px 0">No service-exchanged devices yet. When a device is given away, it'll appear here.</div>`;
+  document.getElementById("mg").innerHTML=`<div class="panel pad" style="max-width:760px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <h2 style="margin:0">Service exchange history</h2>
+      <span class="hint" style="margin:0">${all.length} device${all.length===1?"":"s"} given away</span></div>
+    <p class="hint">Devices that permanently left the library via service exchange. Kept for audit.</p>
+    <input class="search" style="width:100%;margin:4px 0 12px" placeholder="Search by asset, model or ward\u2026" value="${esc(mgQuery||"")}" oninput="mgQuery=this.value;renderHistory()">
+    <div>${body}</div>
+  </div>`;
 }
 function setSub(s){manageSub=s;mgQuery="";anim=true;render();}
 function emptyHTML(icon,title,hint,tone){const er=tone==="err";return `<div class="empty"><div class="circle"${er?' style="background:#fbe3e8;color:var(--rose)"':''}>${icon}</div><b${er?' style="color:var(--rose)"':''}>${esc(title)}</b><div style="font-size:14px;margin-top:5px">${esc(hint)}</div></div>`;}
