@@ -474,7 +474,8 @@ function openModal(mode,modelId,presetId){
       <div class="step"><span class="num">${isLoan?"3":"2"}</span><span>${isLoan?"Loaned by":"Returned by"}</span></div>
       <div class="toggle"><button class="tg ${modal.role==="Biomed"?"on":""}" data-role="Biomed" onclick="setRole('Biomed')">Biomed</button>
         <button class="tg ${modal.role==="Porter"?"on":""}" data-role="Porter" onclick="setRole('Porter')">Porter</button></div>
-      <input class="tinput" id="mNote" placeholder="Note (optional)" style="margin-top:9px">
+      <div class="step"><span class="num">${isLoan?"4":"3"}</span><span>Name / note <span style="font-weight:400;opacity:.55">(optional)</span></span></div>
+      <input class="tinput" id="mNote" placeholder="Who has it, or anything useful to note" style="margin-top:9px">
     </div>
     <div class="mfoot"><button class="confirm" id="mGo" style="${isSX&&isLoan?"background:linear-gradient(180deg,#9061f0,#7c3aed)":""}" disabled onclick="submitModal()">${isLoan?"Confirm loan":"Confirm return"} ${I.chev}</button></div>
   </div></div>`;
@@ -533,7 +534,8 @@ function openReturn(an){
       <div class="step"><span class="num">1</span><span>Returned by</span></div>
       <div class="toggle"><button class="tg ${modal.role==="Biomed"?"on":""}" data-role="Biomed" onclick="setRole('Biomed')">Biomed</button>
         <button class="tg ${modal.role==="Porter"?"on":""}" data-role="Porter" onclick="setRole('Porter')">Porter</button></div>
-      <input class="tinput" id="mNote" placeholder="Note (optional)" style="margin-top:9px">
+      <div class="step"><span class="num">2</span><span>Name / note <span style="font-weight:400;opacity:.55">(optional)</span></span></div>
+      <input class="tinput" id="mNote" placeholder="Who returned it, or anything useful to note" style="margin-top:9px">
     </div>
     <div class="mfoot"><button class="confirm" onclick="confirmReturn()">Confirm return ${I.chev}</button></div>
   </div></div>`;
