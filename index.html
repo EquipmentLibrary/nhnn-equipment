@@ -613,9 +613,10 @@ function renderManage(){
           <button class="subtab ${manageSub==="models"?"on":""}" onclick="setSub('models')">Models</button>
           <button class="subtab ${manageSub==="locations"?"on":""}" onclick="setSub('locations')">Locations</button>
           <button class="subtab ${manageSub==="check"?"on":""}" onclick="setSub('check')">Check</button>
-          <button class="subtab ${manageSub==="history"?"on":""}" onclick="setSub('history')">History</button></div>
+          <button class="subtab ${manageSub==="history"?"on":""}" onclick="setSub('history')">History</button>
+          <button class="subtab ${manageSub==="banner"?"on":""}" onclick="setSub('banner')">Message</button></div>
       </div></div><div id="mg"></div>`;
-  manageSub==="assets"?renderAssets():manageSub==="models"?renderModels():manageSub==="locations"?renderLocations():manageSub==="history"?renderHistory():renderCheck();
+  manageSub==="assets"?renderAssets():manageSub==="models"?renderModels():manageSub==="locations"?renderLocations():manageSub==="history"?renderHistory():manageSub==="banner"?renderBanner():renderCheck();
 }
 
 /* ----- manage: devices + import/export ----- */
@@ -917,7 +918,75 @@ function renderHistory(){
     <div>${body}</div>
   </div>`;
 }
-function setSub(s){manageSub=s;mgQuery="";anim=true;render();}
+function setSub(s){manageSub=s;mgQuery="";anim=true;if(s==="banner"){bannerEdit=Object.assign(bannerDefaults(),data.banner||{});}render();}
+let bannerEdit=null;
+function bannerDefaults(){return {on:false,text:"",fg:"#ffffff",bg:"#005EB8",anim:"scroll",speed:18};}
+function setBannerOn(v){bannerEdit.on=v;renderBanner();}
+function setAnim(v){bannerEdit.anim=v;renderBanner();}
+function insertEmoji(e){const i=document.getElementById("bMsg");bannerEdit.text=(bannerEdit.text||"")+e;if(i){i.value=bannerEdit.text;i.focus();}updateBannerPreview();}
+function updateBannerPreview(){
+  const t=document.getElementById("bprevWrap"),x=document.getElementById("bprevText");if(!t||!x)return;
+  t.className="ticker "+(bannerEdit.anim||"scroll");
+  t.style.background=bannerEdit.bg;t.style.color=bannerEdit.fg;t.style.setProperty("--spd",(bannerEdit.speed||18)+"s");
+  x.textContent=(bannerEdit.text||"").trim()||"Your message will appear here";
+}
+function saveBannerMsg(){
+  if(bannerEdit.on&&!(bannerEdit.text||"").trim()){toast("Add a message before turning it on.","err");return;}
+  persist("saveBanner",{banner:bannerEdit});
+  toast(bannerEdit.on?"Message saved — the board will show it within a few seconds.":"Message turned off.");
+}
+function renderBanner(){
+  if(!bannerEdit)bannerEdit=Object.assign(bannerDefaults(),data.banner||{});
+  const b=bannerEdit;
+  const anims=[["scroll","Slide \\u2190"],["scrollRight","Slide \\u2192"],["blink","Blink"],["rainbow","Rainbow"],["glow","Glow"],["wave","Wave"]];
+  const animBtns=anims.map(a=>`<button class="tg ${b.anim===a[0]?"on":""}" onclick="setAnim('${a[0]}')">${a[1]}</button>`).join("");
+  const emojis=["\\uD83C\\uDF89","\\uD83D\\uDC4F","\\uD83D\\uDC99","\\uD83D\\uDE4C","\\u2728","\\uD83C\\uDFC6","\\uD83E\\uDE7A","\\u2B50"];
+  const emojiBtns=emojis.map(e=>`<button class="btn btn-ghost btn-sm" style="font-size:17px;padding:4px 9px" onclick="insertEmoji('${e}')">${e}</button>`).join("");
+  const css=`<style>
+    .ticker{position:relative;overflow:hidden;white-space:nowrap;padding:13px 16px;font-weight:800;font-size:19px;line-height:1.3;text-align:center;border-radius:10px}
+    .ticker .ti{display:inline-block;will-change:transform}
+    .ticker.scroll,.ticker.scrollRight{text-align:left}
+    @keyframes tkL{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+    @keyframes tkR{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+    @keyframes tkBlink{0%,49%{opacity:1}50%,100%{opacity:.12}}
+    @keyframes tkRainbow{0%{color:#ff3b30}16%{color:#ff9500}33%{color:#ffcc00}50%{color:#34c759}66%{color:#0a84ff}83%{color:#5e5ce6}100%{color:#ff2d55}}
+    @keyframes tkGlow{0%,100%{text-shadow:0 0 4px currentColor;transform:scale(1)}50%{text-shadow:0 0 18px currentColor;transform:scale(1.06)}}
+    @keyframes tkWave{0%,100%{transform:translateY(0)}50%{transform:translateY(-24%)}}
+    .ticker.scroll .ti{animation:tkL var(--spd,18s) linear infinite}
+    .ticker.scrollRight .ti{animation:tkR var(--spd,18s) linear infinite}
+    .ticker.blink .ti{animation:tkBlink 1.1s steps(1,end) infinite}
+    .ticker.rainbow .ti{animation:tkRainbow var(--spd,6s) linear infinite}
+    .ticker.glow .ti{animation:tkGlow 1.7s ease-in-out infinite}
+    .ticker.wave .ti{animation:tkWave 1.5s ease-in-out infinite}
+  </style>`;
+  document.getElementById("mg").innerHTML=css+`<div class="panel pad" style="max-width:680px">
+    <h2 style="margin:0 0 4px">Message board</h2>
+    <p class="hint">A scrolling message shown on the ward stock board \u2014 use it to thank wards for returning kit. Changes appear on the board within a few seconds.</p>
+
+    <div style="margin:14px 0 6px"><span class="lab">Show on the board</span></div>
+    <div class="toggle"><button class="tg ${b.on?"on":""}" onclick="setBannerOn(true)">On</button>
+      <button class="tg ${!b.on?"on":""}" onclick="setBannerOn(false)">Off</button></div>
+
+    <div class="field" style="margin-top:14px"><label class="lab">Message</label>
+      <input class="tinput" id="bMsg" value="${esc(b.text||"")}" maxlength="300" placeholder="e.g. Thank you, Bernard Sunley! \uD83C\uDF89" oninput="bannerEdit.text=this.value;updateBannerPreview()"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 4px">${emojiBtns}</div>
+
+    <label class="lab" style="margin-top:8px">Animation</label>
+    <div class="toggle" style="flex-wrap:wrap">${animBtns}</div>
+
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:14px">
+      <div><label class="lab">Text colour</label><br><input type="color" value="${b.fg||"#ffffff"}" oninput="bannerEdit.fg=this.value;updateBannerPreview()" style="width:54px;height:36px;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer"></div>
+      <div><label class="lab">Background</label><br><input type="color" value="${b.bg||"#005EB8"}" oninput="bannerEdit.bg=this.value;updateBannerPreview()" style="width:54px;height:36px;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer"></div>
+      <div style="flex:1;min-width:160px"><label class="lab">Speed <span style="font-weight:400;opacity:.55">(left = faster)</span></label><br>
+        <input type="range" min="4" max="50" value="${b.speed||18}" oninput="bannerEdit.speed=+this.value;updateBannerPreview()" style="width:100%;margin-top:10px"></div>
+    </div>
+
+    <label class="lab" style="margin-top:16px">Live preview</label>
+    <div class="ticker ${b.anim||"scroll"}" id="bprevWrap" style="background:${b.bg||"#005EB8"};color:${b.fg||"#ffffff"};--spd:${b.speed||18}s;margin-top:6px"><span class="ti" id="bprevText">${esc((b.text||"").trim()||"Your message will appear here")}</span></div>
+
+    <div style="margin-top:18px"><button class="btn btn-primary" onclick="saveBannerMsg()">Save message</button></div>
+  </div>`;
+}
 function emptyHTML(icon,title,hint,tone){const er=tone==="err";return `<div class="empty"><div class="circle"${er?' style="background:#fbe3e8;color:var(--rose)"':''}>${icon}</div><b${er?' style="color:var(--rose)"':''}>${esc(title)}</b><div style="font-size:14px;margin-top:5px">${esc(hint)}</div></div>`;}
 
 /* ---------------- A6 asset label (QR + manual, double-sided) ---------------- */
