@@ -633,7 +633,7 @@ function renderAssets(){
         <button class="btn btn-primary" style="width:100%;margin-bottom:9px" onclick="document.getElementById('importFile').click()">${I.upload} Import spreadsheet</button>
         <div class="inline"><button class="btn btn-ghost" style="flex:1" onclick="downloadTemplate()">${I.sheet} Template</button>
           <button class="btn btn-ghost" style="flex:1" onclick="exportData()">${I.download} Export</button></div>
-        <button class="btn btn-ghost" style="width:100%;margin-top:9px" onclick="printGenericLabel()">${I.label} Print returns label (QR)</button>
+        <button class="btn btn-ghost" style="width:100%;margin-top:9px" onclick="printGenericLabel()">${I.label} Print returns label (A5, fold to A6)</button>
         <p class="hint">Spreadsheet columns (first sheet): <b>AssetNumber, Model, Type, Ref, Category</b> — one row per device. Models are created automatically; duplicate labels are skipped. .xlsx or .csv.</p>
       </div>
     </div>
@@ -695,22 +695,24 @@ function openModelEditor(mode,id){
       <div style="font-weight:800;color:var(--s900);font-size:16px">${mode==="add"?"Add a model":esc(m.name)}</div></div>
       <button class="x" onclick="closeModal()">${I.x}</button></div>
     <div class="mbody">
-      <div class="field"><label class="lab">Model name</label><input class="tinput" id="emName" value="${m?esc(m.name):""}" placeholder="e.g. Alaris GP infusion pump"></div>
-      <div class="field"><label class="lab">Model number (shown on the label)</label><input class="tinput mono" id="emNum" inputmode="numeric" value="${m?(m.number||""):nextModelNumber()}" placeholder="e.g. 7"></div>
-      <div class="field"><label class="lab">Device type</label><input class="tinput" id="emType" value="${m?esc(m.type):""}" placeholder="e.g. Infusion pump"></div>
-      <div class="field"><label class="lab">Reference</label><input class="tinput" id="emRef" value="${m?esc(m.ref):""}" placeholder="e.g. INF-07"></div>
-      <div class="field"><label class="lab">Photo (shown big on the main page)</label>
-        <div class="photopick"><label class="btn btn-ghost btn-sm" style="cursor:pointer">${I.upload} Choose photo<input type="file" accept="image/*" style="display:none" onchange="editorPick(event)"></label>
+      <div class="field"><label class="lab">Model</label><input class="tinput" id="emName" value="${m?esc(m.name):""}" placeholder="e.g. Alaris GP infusion pump"></div>
+      <div class="field"><label class="lab">Image (paste a link, or upload)</label>
+        <input class="tinput" id="emImg" value="${m?esc(m.photo||""):""}" placeholder="https://… image URL" oninput="editorImgUrl()">
+        <div class="photopick" style="margin-top:8px"><label class="btn btn-ghost btn-sm" style="cursor:pointer">${I.upload} Upload instead<input type="file" accept="image/*" style="display:none" onchange="editorPick(event)"></label>
           <img id="emPrev" class="photoprev" src="${editorPhoto}" style="${editorPhoto?"":"display:none"}"></div></div>
-      <label class="lab">Loan category</label>
-      <div class="toggle"><button class="tg ${editorCat==="Standard"?"on":""}" data-cat="Standard" onclick="setEditorCat('Standard')">Standard</button>
-        <button class="tg ${editorCat==="Service Exchange"?"on":""}" data-cat="Service Exchange" style="${editorCat==="Service Exchange"?"background:var(--sx);color:#fff;border-color:transparent":""}" onclick="setEditorCat('Service Exchange')">Service Exchange</button></div>
+      <div class="field"><label class="lab">Brand</label><input class="tinput" id="emRef" value="${m?esc(m.ref):""}" placeholder="e.g. Alaris"></div>
+      <div class="field"><label class="lab">Category</label><input class="tinput" id="emType" value="${m?esc(m.type):""}" placeholder="e.g. Infusion pump"></div>
+      <div class="field"><label class="lab">Number</label><input class="tinput mono" id="emNum" inputmode="numeric" value="${m?(m.number||""):nextModelNumber()}" placeholder="e.g. 7"></div>
+      <label class="lab">Service exchange</label>
+      <div class="toggle"><button class="tg ${editorCat==="Standard"?"on":""}" data-cat="Standard" onclick="setEditorCat('Standard')">No (standard)</button>
+        <button class="tg ${editorCat==="Service Exchange"?"on":""}" data-cat="Service Exchange" style="${editorCat==="Service Exchange"?"background:var(--sx);color:#fff;border-color:transparent":""}" onclick="setEditorCat('Service Exchange')">Yes (service exchange)</button></div>
     </div>
     <div class="mfoot"><button class="confirm" onclick="saveModel()">${mode==="add"?"Add model":"Save changes"} ${I.chev}</button></div>
   </div></div>`;
 }
 function setEditorCat(c){editorCat=c;document.querySelectorAll("[data-cat]").forEach(el=>{const on=el.dataset.cat===c;el.classList.toggle("on",on);el.style.cssText=on&&c==="Service Exchange"?"background:var(--sx);color:#fff;border-color:transparent":"";});}
-function editorPick(e){const f=e.target.files[0];if(!f)return;resizeImage(f,d=>{editorPhoto=d;const p=document.getElementById("emPrev");if(p){p.src=d;p.style.display="block";}});}
+function editorImgUrl(){const u=val("emImg").trim();editorPhoto=u;const p=document.getElementById("emPrev");if(p){if(u){p.src=u;p.style.display="block";}else{p.style.display="none";}}}
+function editorPick(e){const f=e.target.files[0];if(!f)return;resizeImage(f,d=>{editorPhoto=d;const i=document.getElementById("emImg");if(i)i.value="";const p=document.getElementById("emPrev");if(p){p.src=d;p.style.display="block";}});}
 function saveModel(){
   const name=val("emName").trim(),type=val("emType").trim(),ref=val("emRef").trim()||"—";
   const num=parseInt(val("emNum"),10);
@@ -927,11 +929,11 @@ function openAssetLabel(an){
   const qr=qrSrc(assetURL(an));
   document.getElementById("modal-root").innerHTML=`
   <div class="overlay" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:660px">
-    <div class="mhead"><div><div class="eyebrow2">A6 LABEL \u00b7 ${esc(an)}</div><div class="htitle">${esc(asset.model)}</div></div>
+    <div class="mhead"><div><div class="eyebrow2">RETURN LABEL \u00b7 ${esc(an)}</div><div class="htitle">${esc(asset.model)}</div></div>
       <button class="x" onclick="closeModal()">${I.x}</button></div>
     <div class="mbody"><p class="labtag">One label per device \u2014 the QR carries this asset number, so scanning opens its details and the return &amp; decontamination form.</p>
       <div class="labelwrap">${labelFront(asset,model,qr)}${labelBack(asset,model)}</div></div>
-    <div class="mfoot"><button class="confirm" onclick="printAssetLabel('${esc(an)}')">${I.print} Print A6 (double-sided)</button></div>
+    <div class="mfoot"><button class="confirm" onclick="printAssetLabel('${esc(an)}')">${I.print} Print label (A5, fold to A6)</button></div>
   </div></div>`;
 }
 function labelFront(asset,model,qr){
@@ -955,18 +957,36 @@ function printAssetLabel(an){
   const asset=data.assets.find(a=>a.assetNumber===an);if(!asset)return;
   const model=data.models.find(m=>m.name===asset.model)||{number:0,type:""};
   const qr=qrSrc(assetURL(an));
-  const css="@page{size:A6;margin:0}*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;color:#14181f}.pg{width:105mm;height:148mm;display:flex;flex-direction:column;page-break-after:always;overflow:hidden}.h{padding:9mm 8mm 5mm;border-bottom:2px solid #14181f}.lib{font-size:15pt;font-weight:800}.dep{font-size:8pt;letter-spacing:1.4px;text-transform:uppercase;color:#5a5f66;margin-top:2mm}.b{flex:1;padding:7mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5mm}.no{font-size:26pt;font-weight:800;font-family:monospace}.mn{font-size:12pt;font-weight:700}.big{font-size:20pt;font-weight:800}.qr{width:50mm;height:50mm}.cap{font-size:9.5pt;color:#333;line-height:1.45}.foot{font-size:8pt;color:#666;text-align:center;padding:5mm;border-top:1px dashed #999}.bl{flex:1;text-align:left;padding:8mm 7mm;display:flex;flex-direction:column;gap:7mm}.ln{border-bottom:1px solid #555;height:9mm}.lb{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#555}";
-  const front=`<div class="pg"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Biomedical Engineering &middot; Model #${p2(model.number||0)}</div></div><div class="b"><div class="no">${esc(asset.assetNumber)}</div><div class="mn">${esc(asset.model)}</div>${qr?`<img class="qr" src="${qr}">`:""}<div class="cap">Finished with this device?<br>Scan for its details and to log return &amp; decontamination.</div></div><div class="foot">No phone? Use the slip on the back &middot; ext. 74321</div></div>`;
-  const back=`<div class="pg"><div class="h"><div class="lib">Return &amp; decontamination</div><div class="dep">${esc(asset.assetNumber)} &middot; ${esc(asset.model)}</div></div><div class="bl"><div><div class="lb">Ready for collection?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Decontaminated?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Signed off by (nurse)</div><div class="ln"></div></div><div><div class="lb">Date</div><div class="ln"></div></div></div><div class="foot">Leave the device visible for collection, then call ext. 74321 to let us know</div></div>`;
-  const doc="<!doctype html><html><head><meta charset='utf-8'><title>A6 "+esc(an)+"</title><style>"+css+"</style></head><body>"+front+back+"<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
+  const css="@page{size:A5 landscape;margin:0}*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;color:#14181f}.sheet{width:210mm;height:148mm;display:flex}.half{width:105mm;height:148mm;display:flex;flex-direction:column;justify-content:center;padding:11mm 9mm}.left{border-right:1px dashed #aab4c2}.h{border-bottom:2px solid #14181f;padding-bottom:4mm;margin-bottom:6mm}.lib{font-size:14pt;font-weight:800}.dep{font-size:8pt;letter-spacing:1.2px;text-transform:uppercase;color:#5a5f66;margin-top:1.5mm}.no{font-size:22pt;font-weight:800;font-family:monospace;text-align:center;margin-bottom:2mm}.mn{font-size:11pt;font-weight:700;text-align:center;margin-bottom:5mm}.qr{width:40mm;height:40mm;display:block;margin:0 auto 5mm}.cap{font-size:9pt;color:#333;line-height:1.45;text-align:center}.foot{font-size:7.5pt;color:#666;text-align:center;margin-top:7mm}.fld{margin-bottom:7mm}.lb{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:2mm}.opt{font-size:11pt}.ln{border-bottom:1px solid #555;height:8mm}.lfoot{font-size:8pt;color:#5a5f66;line-height:1.4;margin-top:9mm}";
+  const slip=`<div class="half left"><div class="h"><div class="lib">Return &amp; decontamination</div><div class="dep">${esc(asset.assetNumber)} &middot; ${esc(asset.model)}</div></div>`+
+    `<div class="fld"><div class="lb">Ready for collection?</div><div class="opt">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div>`+
+    `<div class="fld"><div class="lb">Decontaminated?</div><div class="opt">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div>`+
+    `<div class="fld"><div class="lb">Signed off by (nurse)</div><div class="ln"></div></div>`+
+    `<div class="fld"><div class="lb">Date</div><div class="ln"></div></div>`+
+    `<div class="lfoot">Leave the device visible for collection, then call ext. 74321 to let us know.</div></div>`;
+  const front=`<div class="half right"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Biomedical Engineering &middot; Model #${p2(model.number||0)}</div></div>`+
+    `<div class="no">${esc(asset.assetNumber)}</div><div class="mn">${esc(asset.model)}</div>`+
+    (qr?`<img class="qr" src="${qr}">`:`<div class="qr" style="border:1px dashed #aaa;display:grid;place-items:center;font-size:9pt;color:#999;text-align:center">QR loads<br>when deployed</div>`)+
+    `<div class="cap">Finished with this device?<br>Scan for its details and to log return &amp; decontamination.</div>`+
+    `<div class="foot">No phone? Use the slip on the back &middot; ext. 74321</div></div>`;
+  const doc="<!doctype html><html><head><meta charset='utf-8'><title>Label "+esc(an)+" (A5, fold to A6)</title><style>"+css+"</style></head><body><div class='sheet'>"+slip+front+"</div><script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
   try{const w=window.open("","_blank");if(!w){toast("Allow pop-ups to print, or print from the deployed site.","err");return;}w.document.open();w.document.write(doc);w.document.close();}catch(e){toast("Print view is blocked here, works once deployed.","err");}
 }
 function printGenericLabel(){
   const qr=qrSrc(RETURN_URL);
-  const css="@page{size:A6;margin:0}*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;color:#14181f}.pg{width:105mm;height:148mm;display:flex;flex-direction:column;page-break-after:always;overflow:hidden}.h{padding:9mm 8mm 5mm;border-bottom:2px solid #14181f}.lib{font-size:15pt;font-weight:800}.dep{font-size:8pt;letter-spacing:1.4px;text-transform:uppercase;color:#5a5f66;margin-top:2mm}.b{flex:1;padding:7mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5mm}.big{font-size:20pt;font-weight:800;color:#14181f}.qr{width:50mm;height:50mm}.cap{font-size:9.5pt;color:#333;line-height:1.45}.foot{font-size:8pt;color:#666;text-align:center;padding:5mm;border-top:1px dashed #999}.bl{flex:1;text-align:left;padding:8mm 7mm;display:flex;flex-direction:column;gap:7mm}.ln{border-bottom:1px solid #555;height:9mm}.lb{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#555}";
-  const front=`<div class="pg"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Equipment returns</div></div><div class="b"><img src="${LOGO_IMG}" style="width:20mm;height:20mm;object-fit:contain;margin-bottom:1mm"><div class="big">Returning a device?</div>${qr?`<img class="qr" src="${qr}">`:`<div class="qr" style="border:1px dashed #aaa;display:grid;place-items:center;font-size:9pt;color:#999">QR loads<br>when deployed</div>`}<div class="cap">Scan this code with your phone, then type the device&#39;s <b>asset number</b> to tell us it&#39;s ready for collection.</div></div><div class="foot">No phone? Use the slip on the back &middot; ext. 74321</div></div>`;
-  const back=`<div class="pg"><div class="h"><div class="lib">Return slip</div><div class="dep">Equipment Library returns</div></div><div class="bl"><div><div class="lb">Ready for collection?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Decontaminated?</div><div style="font-size:11pt;margin-top:2mm">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div><div><div class="lb">Signed off by (nurse)</div><div class="ln"></div></div><div><div class="lb">Date</div><div class="ln"></div></div></div><div class="foot">Leave the device visible for collection, then call ext. 74321 to let us know</div></div>`;
-  const doc="<!doctype html><html><head><meta charset='utf-8'><title>Returns label</title><style>"+css+"</style></head><body>"+front+back+"<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
+  const css="@page{size:A5 landscape;margin:0}*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;color:#14181f}.sheet{width:210mm;height:148mm;display:flex}.half{width:105mm;height:148mm;display:flex;flex-direction:column;justify-content:center;padding:11mm 9mm}.left{border-right:1px dashed #aab4c2}.h{border-bottom:2px solid #14181f;padding-bottom:4mm;margin-bottom:6mm}.lib{font-size:14pt;font-weight:800}.dep{font-size:8pt;letter-spacing:1.2px;text-transform:uppercase;color:#5a5f66;margin-top:1.5mm}.crest{width:17mm;height:17mm;object-fit:contain;display:block;margin:0 auto 4mm}.big{font-size:18pt;font-weight:800;text-align:center;margin-bottom:5mm}.qr{width:42mm;height:42mm;display:block;margin:0 auto 5mm}.cap{font-size:9pt;color:#333;line-height:1.45;text-align:center}.foot{font-size:7.5pt;color:#666;text-align:center;margin-top:7mm}.fld{margin-bottom:7mm}.lb{font-size:8pt;letter-spacing:1px;text-transform:uppercase;color:#555;margin-bottom:2mm}.opt{font-size:11pt}.ln{border-bottom:1px solid #555;height:8mm}.lfoot{font-size:8pt;color:#5a5f66;line-height:1.4;margin-top:9mm}";
+  const slip=`<div class="half left"><div class="h"><div class="lib">Return slip</div><div class="dep">Equipment Library returns</div></div>`+
+    `<div class="fld"><div class="lb">Ready for collection?</div><div class="opt">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div>`+
+    `<div class="fld"><div class="lb">Decontaminated?</div><div class="opt">&#9744; Yes&nbsp;&nbsp;&nbsp;&#9744; No</div></div>`+
+    `<div class="fld"><div class="lb">Signed off by (nurse)</div><div class="ln"></div></div>`+
+    `<div class="fld"><div class="lb">Date</div><div class="ln"></div></div>`+
+    `<div class="lfoot">Leave the device visible for collection, then call ext. 74321 to let us know.</div></div>`;
+  const front=`<div class="half right"><div class="h"><div class="lib">NHNN Equipment Library</div><div class="dep">Equipment returns</div></div>`+
+    `<img class="crest" src="${LOGO_IMG}"><div class="big">Returning a device?</div>`+
+    (qr?`<img class="qr" src="${qr}">`:`<div class="qr" style="border:1px dashed #aaa;display:grid;place-items:center;font-size:9pt;color:#999;text-align:center">QR loads<br>when deployed</div>`)+
+    `<div class="cap">Scan this code with your phone, then type the device&#39;s <b>asset number</b> to tell us it&#39;s ready for collection.</div>`+
+    `<div class="foot">No phone? Use the slip on the back &middot; ext. 74321</div></div>`;
+  const doc="<!doctype html><html><head><meta charset='utf-8'><title>Returns label (A5, fold to A6)</title><style>"+css+"</style></head><body><div class='sheet'>"+slip+front+"</div><script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script></body></html>";
   try{const w=window.open("","_blank");if(!w){toast("Allow pop-ups to print, or print from the deployed site.","err");return;}w.document.open();w.document.write(doc);w.document.close();}catch(e){toast("Print view is blocked here, works once deployed.","err");}
 }
 
