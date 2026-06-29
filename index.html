@@ -932,10 +932,15 @@ function updateBannerPreview(){
   t.style.fontFamily=fontFamApp(bannerEdit.font);
   x.textContent=(bannerEdit.text||"").trim()||"Your message will appear here";
 }
-function saveBannerMsg(){
+async function saveBannerMsg(){
   if(bannerEdit.on&&!(bannerEdit.text||"").trim()){toast("Add a message before turning it on.","err");return;}
-  persist("saveBanner",{banner:bannerEdit});
-  toast(bannerEdit.on?"Message saved — the board will show it within a few seconds.":"Message turned off.");
+  const j=await persist("saveBanner",{banner:bannerEdit});
+  const b=j&&j.ok&&j.data&&j.data.banner;
+  if(b && (b.text||"")===(bannerEdit.text||"") && !!b.on===!!bannerEdit.on){
+    toast(bannerEdit.on?"Saved \u2713 the board will show it within a few seconds.":"Message turned off.");
+  } else {
+    toast("Save didn't confirm. The board may be a cached/old page \u2014 hard-refresh and check the deployment.","err");
+  }
 }
 function renderBanner(){
   if(!bannerEdit)bannerEdit=Object.assign(bannerDefaults(),data.banner||{});
