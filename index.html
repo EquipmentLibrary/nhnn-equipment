@@ -934,12 +934,18 @@ function updateBannerPreview(){
 }
 async function saveBannerMsg(){
   if(bannerEdit.on&&!(bannerEdit.text||"").trim()){toast("Add a message before turning it on.","err");return;}
-  const j=await persist("saveBanner",{banner:bannerEdit});
-  const b=j&&j.ok&&j.data&&j.data.banner;
+  let j=null;
+  try{
+    const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveBanner",banner:bannerEdit})});
+    j=await r.json();
+  }catch(e){ toast("Couldn't reach the server \u2014 check your connection.","err"); return; }
+  if(!j||!j.ok){ toast("Backend rejected it ("+((j&&j.error)||"no response")+"). The deployment is an old version \u2014 redeploy Code.gs as a new version.","err"); return; }
+  const b=j.data&&j.data.banner;
   if(b && (b.text||"")===(bannerEdit.text||"") && !!b.on===!!bannerEdit.on){
-    toast(bannerEdit.on?"Saved \u2713 the board will show it within a few seconds.":"Message turned off.");
+    data=reconcile(j.data); lastSig=dataSig(data);
+    toast(bannerEdit.on?"Saved \u2713 the board updates within a few seconds.":"Message turned off.");
   } else {
-    toast("Save didn't confirm. The board may be a cached/old page \u2014 hard-refresh and check the deployment.","err");
+    toast("The backend saved nothing back \u2014 it\u2019s missing the message feature. Redeploy the latest Code.gs.","err");
   }
 }
 function renderBanner(){
