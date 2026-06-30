@@ -370,12 +370,47 @@ function render(){
       <button class="tab ${tab==="desk"?"active":""}" onclick="setTab('desk')">${I.swap}<span>Loan &amp; Return</span></button>
       <button class="tab ${tab==="active"?"active":""}" onclick="setTab('active')">${I.clock}<span>On loan</span></button>
       <button class="tab ${tab==="awaiting"?"active":""}" onclick="setTab('awaiting')">${I.collect}<span>Awaiting collection</span></button>
+      <button class="tab ${tab==="help"?"active":""}" onclick="setTab('help')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Help</span></button>
       <button class="tab ${tab==="manage"?"active":""}" onclick="setTab('manage')">${I.settings}<span>Manage</span></button>
     </nav>
   </div></header>
   <div class="manifest"><div class="wrap mfrow">${renderStats()}</div></div>
   <main><div class="wrap" id="view"></div></main>`;
   renderView();
+}
+function renderHelp(){
+  const card=(t,body)=>`<div class="panel pad" style="margin-bottom:16px"><h2 style="margin:0 0 10px">${t}</h2>${body}</div>`;
+  const step=arr=>`<ol style="margin:0;padding-left:20px;line-height:1.7">${arr.map(s=>`<li>${s}</li>`).join("")}</ol>`;
+  document.getElementById("view").innerHTML=`
+  <div style="max-width:760px;margin:0 auto">
+    <div class="panel pad" style="margin-bottom:16px">
+      <h1 style="margin:0 0 6px;font-size:24px">How to use the Equipment Library</h1>
+      <p class="hint" style="margin:0">A quick guide to borrowing and returning equipment. Anyone can use this page \u2014 no login needed.</p>
+    </div>
+    ${card("What this app is for",
+      `<p style="margin:0;line-height:1.7">The Equipment Library lends out medical devices \u2014 things like thermometers, pumps and monitors \u2014 to wards. This app keeps track of where every device is: what\u2019s available, what\u2019s out on loan, and what\u2019s waiting to be collected. Use it whenever a device leaves the library or comes back.</p>`)}
+    ${card("Borrow a device (loan it out)",
+      step([
+        "Open the <b>Loan &amp; Return</b> tab.",
+        "Find the device \u2014 search by its name or asset number, then tap it.",
+        "Choose the <b>ward</b> it\u2019s going to.",
+        "Choose who is taking it (<b>Biomed</b> or <b>Porter</b>), and add a name or note if it\u2019s helpful.",
+        "Tap <b>Confirm</b>. The device is now recorded as on loan to that ward."
+      ]))}
+    ${card("Return a device",
+      step([
+        "Open the <b>Loan &amp; Return</b> tab.",
+        "Type or search the device\u2019s <b>asset number</b>.",
+        "Tap <b>Confirm return</b>. The device goes straight back into available stock."
+      ]))}
+    ${card("See what\u2019s currently out \u2014 \u201cOn loan\u201d tab",
+      `<p style="margin:0;line-height:1.7">The <b>On loan</b> tab lists every device that\u2019s out right now, which ward has it, and who took it. Handy for a quick check of where something is.</p>`)}
+    ${card("Collecting devices back \u2014 \u201cAwaiting collection\u201d tab",
+      `<p style="margin:0 0 8px;line-height:1.7">When a ward has finished with a device, they let us know it\u2019s ready by scanning the QR code on the device\u2019s return label with their phone and entering the asset number.</p>
+       <p style="margin:0;line-height:1.7">Anything a ward has marked as ready shows up in the <b>Awaiting collection</b> tab \u2014 so you can see what to go and pick up, and where it is.</p>`)}
+    ${card("Need a hand?",
+      `<p style="margin:0;line-height:1.7">If something doesn\u2019t look right, or a device isn\u2019t showing where you expect, contact the Clinical Engineering department on <b>ext. 74321</b>.</p>`)}
+  </div>`;
 }
 function renderStats(){
   const t={total:data.assets.length,"Available":0,"On Loan":0,"Awaiting Collection":0};
@@ -387,6 +422,7 @@ function renderView(){
   const v=document.getElementById("view");
   if(tab==="active")renderActive();
   else if(tab==="awaiting")renderAwaiting();
+  else if(tab==="help")renderHelp();
   else if(tab==="manage")manageUnlocked?renderManage():renderLock();
   else renderDesk();
   if(anim&&tab!=="desk"){v.classList.add("anim-in");v.addEventListener("animationend",function h(){v.classList.remove("anim-in");v.removeEventListener("animationend",h);});}
@@ -959,7 +995,7 @@ function renderBanner(){
   if(!bannerEdit)bannerEdit=Object.assign(bannerDefaults(),data.banner||{});
   const b=bannerEdit;
   const anims=[["scroll","Slide \u2190"],["scrollRight","Slide \u2192"],["bounce","Bounce"],["wave","Wave"],["zoom","Zoom"],["shake","Shake"],["swing","Swing"],["jelly","Jelly"],["pulse","Pulse"],["blink","Blink"],["flash","Flash"],["glow","Glow"],["neon","Neon"],["rainbow","Rainbow"],["gradient","Gradient"]];
-  const themes=[["","None (plain colour)"],["pitch","\u26BD Football pitch"],["court","\uD83C\uDFC0 Basketball court"],["fireworks","\uD83C\uDF86 Fireworks"],["stars","\uD83C\uDF19 Night sky"],["sun","\u2600\uFE0F Hot weather"],["snow","\u2744\uFE0F Snow"],["hearts","\uD83D\uDC97 Hearts"]];
+  const themes=[["","None (plain colour)"],["pitch","\u26BD Football pitch"],["court","\uD83C\uDFC0 Basketball court"],["fireworks","\uD83C\uDF86 Fireworks"],["stars","\uD83C\uDF19 Night sky"],["sun","\u2600\uFE0F Hot weather"],["snow","\u2744\uFE0F Snow"],["hearts","\uD83D\uDC97 Hearts"],["carbon","Carbon fibre"],["stripes","Diagonal stripes"],["dots","Polka dots"],["checker","Checkerboard"]];
   const animBtns=anims.map(a=>`<button class="tg ${b.anim===a[0]?"on":""}" onclick="setAnim('${a[0]}')">${a[1]}</button>`).join("");
   const emojis=["\uD83C\uDF89","\uD83D\uDC4F","\uD83D\uDC99","\uD83D\uDE4C","\u2728","\uD83C\uDFC6","\uD83E\uDE7A","\u2B50"];
   const emojiBtns=emojis.map(e=>`<button class="btn btn-ghost btn-sm" style="font-size:17px;padding:4px 9px" onclick="insertEmoji('${e}')">${e}</button>`).join("");
@@ -1001,18 +1037,18 @@ function renderBanner(){
     .ticker.pulse .ti{animation:tkPulse 1.6s ease-in-out infinite}
     @keyframes tkRoll{0%{left:-7%;transform:translateY(-50%) rotate(0)}100%{left:107%;transform:translateY(-50%) rotate(720deg)}}
     @keyframes tkTwinkle{0%,100%{opacity:1}50%{opacity:.4}}
-    @keyframes tkBurst{0%{opacity:0;transform:translateY(-50%) scale(.2)}25%{opacity:1;transform:translateY(-50%) scale(1.15)}60%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:0;transform:translateY(-50%) scale(1.25)}}
+    @keyframes fwBurst{0%{opacity:0;box-shadow:0 0 0 1px #ffd23f, 0 0 0 1px #ff5e5e, 0 0 0 1px #5ec8ff, 0 0 0 1px #7CFC00, 0 0 0 1px #ff7ae0, 0 0 0 1px #ffffff, 0 0 0 1px #ffd23f, 0 0 0 1px #ff5e5e, 0 0 0 1px #5ec8ff, 0 0 0 1px #7CFC00, 0 0 0 1px #ff7ae0, 0 0 0 1px #ffffff}10%{opacity:1}100%{opacity:0;box-shadow:26px 0px 0 1px #ffd23f, 23px 13px 0 1px #ff5e5e, 13px 23px 0 1px #5ec8ff, 0px 26px 0 1px #7CFC00, -13px 23px 0 1px #ff7ae0, -23px 13px 0 1px #ffffff, -26px 0px 0 1px #ffd23f, -23px -13px 0 1px #ff5e5e, -13px -23px 0 1px #5ec8ff, 0px -26px 0 1px #7CFC00, 13px -23px 0 1px #ff7ae0, 23px -13px 0 1px #ffffff}}
     @keyframes tkSpin{0%{transform:translateY(-50%) rotate(0)}100%{transform:translateY(-50%) rotate(360deg)}}
     @keyframes tkSnow{0%{background-position:0 0}100%{background-position:0 60px}}
     @keyframes tkFloat{0%{transform:translateY(10px);opacity:0}20%{opacity:1}100%{transform:translateY(-24px);opacity:0}}
     @keyframes tkDribble{0%{left:-7%;transform:translateY(4px)}12.5%{transform:translateY(-14px)}25%{transform:translateY(4px)}37.5%{transform:translateY(-11px)}50%{transform:translateY(4px)}62.5%{transform:translateY(-14px)}75%{transform:translateY(4px)}87.5%{transform:translateY(-11px)}100%{left:107%;transform:translateY(4px)}}
-    .ticker.theme-pitch{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 19px,rgba(255,255,255,.75) 19px 22px,transparent 22px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.75) calc(50% - 1.5px),rgba(255,255,255,.75) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(90deg,#1f9d55 0 30px,#1a8a4a 30px 60px);background-repeat:no-repeat,no-repeat,repeat}
+    .ticker.theme-pitch{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 19px,rgba(255,255,255,.8) 19px 22px,transparent 22px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.8) calc(50% - 1.5px),rgba(255,255,255,.8) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(89deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px),repeating-linear-gradient(91deg,rgba(0,0,0,.07) 0 1px,transparent 1px 5px),repeating-linear-gradient(90deg,#2f9e4f 0 30px,#2a9148 30px 60px);background-repeat:no-repeat,no-repeat,repeat,repeat,repeat}
     .ticker.theme-pitch::after{content:"\\26BD";position:absolute;top:50%;left:0;font-size:18px;line-height:1;z-index:1;transform:translateY(-50%);animation:tkRoll 3.5s linear infinite}
-    .ticker.theme-court{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 18px,rgba(255,255,255,.6) 18px 21px,transparent 21px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.6) calc(50% - 1.5px),rgba(255,255,255,.6) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(0deg,#c8813f 0 11px,#b9722f 11px 22px);background-repeat:no-repeat,no-repeat,repeat}
+    .ticker.theme-court{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 18px,rgba(255,255,255,.6) 18px 21px,transparent 21px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.6) calc(50% - 1.5px),rgba(255,255,255,.6) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 2px,transparent 2px 7px),repeating-linear-gradient(0deg,#c8813f 0 14px,#bb7636 14px 16px,#c2793a 16px 30px);background-repeat:no-repeat,no-repeat,repeat,repeat}
     .ticker.theme-court::after{content:"\\1F3C0";position:absolute;top:calc(50% - 9px);left:0;font-size:18px;line-height:1;z-index:1;animation:tkDribble 3.2s linear infinite}
-    .ticker.theme-fireworks{color:#fff;background:linear-gradient(180deg,#0a0a2a,#241433)}
-    .ticker.theme-fireworks::before{content:"\\1F386";position:absolute;left:24%;top:50%;font-size:20px;transform:translateY(-50%);animation:tkBurst 1.8s ease-out infinite}
-    .ticker.theme-fireworks::after{content:"\\1F387";position:absolute;left:70%;top:50%;font-size:20px;transform:translateY(-50%);animation:tkBurst 1.8s ease-out infinite .9s}
+    .ticker.theme-fireworks{color:#fff;background:radial-gradient(circle at 50% 120%,#1b1140,#0a0a2a)}
+    .ticker.theme-fireworks::before{content:"";position:absolute;left:28%;top:48%;width:3px;height:3px;border-radius:50%;background:transparent;z-index:1;animation:fwBurst 1.7s ease-out infinite}
+    .ticker.theme-fireworks::after{content:"";position:absolute;left:68%;top:52%;width:3px;height:3px;border-radius:50%;background:transparent;z-index:1;animation:fwBurst 2.1s ease-out infinite .9s}
     .ticker.theme-stars{color:#fff;background:linear-gradient(180deg,#0b1d3a,#13243f)}
     .ticker.theme-stars::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 60%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 75%,#fff,transparent),radial-gradient(1.5px 1.5px at 85% 40%,#fff,transparent),radial-gradient(1.5px 1.5px at 33% 50%,#fff,transparent);animation:tkTwinkle 2.4s ease-in-out infinite}
     .ticker.theme-stars::after{content:"\\1F319";position:absolute;right:6%;top:50%;font-size:22px;transform:translateY(-50%)}
@@ -1023,6 +1059,11 @@ function renderBanner(){
     .ticker.theme-hearts{color:#fff;background:linear-gradient(120deg,#ff7eb3,#ff5fa2)}
     .ticker.theme-hearts::before{content:"\\1F497";position:absolute;left:20%;top:55%;font-size:18px;animation:tkFloat 2.6s ease-in infinite}
     .ticker.theme-hearts::after{content:"\\1F497";position:absolute;left:72%;top:55%;font-size:18px;animation:tkFloat 2.6s ease-in infinite 1.3s}
+      @keyframes tkStripeMove{0%{background-position:0 0}100%{background-position:56px 0}}
+    .ticker.theme-carbon{color:#fff;background:linear-gradient(27deg,#181818 5px,transparent 5px) 0 5px,linear-gradient(207deg,#181818 5px,transparent 5px) 10px 0,linear-gradient(27deg,#2a2a2a 5px,transparent 5px) 0 10px,linear-gradient(207deg,#2a2a2a 5px,transparent 5px) 10px 5px,linear-gradient(90deg,#202020 10px,transparent 10px),#1b1b1b;background-size:20px 20px}
+    .ticker.theme-stripes{color:#fff;background:repeating-linear-gradient(45deg,#005EB8 0 14px,#0a74d6 14px 28px);animation:tkStripeMove 1.2s linear infinite}
+    .ticker.theme-dots{color:#fff;background:radial-gradient(rgba(255,255,255,.55) 2px,transparent 3px) 0 0/16px 16px,linear-gradient(135deg,#7b2ff7,#d6336c)}
+    .ticker.theme-checker{color:#fff;background:conic-gradient(#2b2b2b 90deg,#3a3a3a 90deg 180deg,#2b2b2b 180deg 270deg,#3a3a3a 270deg) 0 0/24px 24px}
   </style>`;
   document.getElementById("mg").innerHTML=css+`<div class="panel pad" style="max-width:680px">
     <h2 style="margin:0 0 4px">Message board</h2>
