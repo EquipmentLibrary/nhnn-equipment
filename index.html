@@ -939,7 +939,12 @@ async function saveBannerMsg(){
     const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveBanner",banner:bannerEdit})});
     j=await r.json();
   }catch(e){ toast("Couldn't reach the server \u2014 check your connection.","err"); return; }
-  if(!j||!j.ok){ toast("Backend rejected it ("+((j&&j.error)||"no response")+"). The deployment is an old version \u2014 redeploy Code.gs as a new version.","err"); return; }
+  if(!j||!j.ok){
+    let v="(no response)"; try{const rv=await fetch(CONFIG.API_URL+"?action=version&t="+Date.now());const jv=await rv.json();v=jv.version||v;}catch(e){}
+    const id=((CONFIG.API_URL.match(/\/s\/([^/]+)\//)||[])[1]||"").slice(-8);
+    toast("App is posting to deployment \u2026"+id+", which is running version: "+v+". That deployment needs the banner Code.gs deployed to it.","err");
+    return;
+  }
   const b=j.data&&j.data.banner;
   if(b && (b.text||"")===(bannerEdit.text||"") && !!b.on===!!bannerEdit.on){
     data=reconcile(j.data); lastSig=dataSig(data);
