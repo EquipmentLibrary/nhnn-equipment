@@ -956,7 +956,7 @@ async function saveBannerMsg(){
 function renderBanner(){
   if(!bannerEdit)bannerEdit=Object.assign(bannerDefaults(),data.banner||{});
   const b=bannerEdit;
-  const anims=[["scroll","Slide \u2190"],["scrollRight","Slide \u2192"],["blink","Blink"],["rainbow","Rainbow"],["glow","Glow"],["wave","Wave"]];
+  const anims=[["scroll","Slide \u2190"],["scrollRight","Slide \u2192"],["bounce","Bounce"],["wave","Wave"],["zoom","Zoom"],["shake","Shake"],["blink","Blink"],["flash","Flash"],["glow","Glow"],["neon","Neon"],["rainbow","Rainbow"],["gradient","Gradient"]];
   const animBtns=anims.map(a=>`<button class="tg ${b.anim===a[0]?"on":""}" onclick="setAnim('${a[0]}')">${a[1]}</button>`).join("");
   const emojis=["\uD83C\uDF89","\uD83D\uDC4F","\uD83D\uDC99","\uD83D\uDE4C","\u2728","\uD83C\uDFC6","\uD83E\uDE7A","\u2B50"];
   const emojiBtns=emojis.map(e=>`<button class="btn btn-ghost btn-sm" style="font-size:17px;padding:4px 9px" onclick="insertEmoji('${e}')">${e}</button>`).join("");
@@ -978,6 +978,18 @@ function renderBanner(){
     .ticker.rainbow .ti{animation:tkRainbow var(--spd,6s) linear infinite}
     .ticker.glow .ti{animation:tkGlow 1.7s ease-in-out infinite}
     .ticker.wave .ti{animation:tkWave 1.5s ease-in-out infinite}
+    @keyframes tkBounce{0%,100%{transform:translateY(0)}25%{transform:translateY(-32%)}55%{transform:translateY(0)}75%{transform:translateY(-12%)}}
+    @keyframes tkZoom{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
+    @keyframes tkShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+    @keyframes tkFlash{0%,100%{opacity:1}50%{opacity:0}}
+    @keyframes tkNeon{0%,100%{text-shadow:0 0 4px currentColor,0 0 12px currentColor}50%{text-shadow:0 0 2px currentColor,0 0 7px currentColor,0 0 22px currentColor}}
+    @keyframes tkGrad{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+    .ticker.bounce .ti{animation:tkBounce 1.4s ease-in-out infinite}
+    .ticker.zoom .ti{animation:tkZoom 1.5s ease-in-out infinite}
+    .ticker.shake .ti{animation:tkShake .55s ease-in-out infinite}
+    .ticker.flash .ti{animation:tkFlash .8s steps(1,end) infinite}
+    .ticker.neon .ti{animation:tkNeon 1.5s ease-in-out infinite}
+    .ticker.gradient .ti{background:linear-gradient(90deg,#ff3b30,#ff9500,#ffcc00,#34c759,#0a84ff,#5e5ce6,#ff2d55);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tkGrad var(--spd,6s) linear infinite}
   </style>`;
   document.getElementById("mg").innerHTML=css+`<div class="panel pad" style="max-width:680px">
     <h2 style="margin:0 0 4px">Message board</h2>
