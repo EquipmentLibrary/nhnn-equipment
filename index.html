@@ -959,7 +959,7 @@ function renderBanner(){
   if(!bannerEdit)bannerEdit=Object.assign(bannerDefaults(),data.banner||{});
   const b=bannerEdit;
   const anims=[["scroll","Slide \u2190"],["scrollRight","Slide \u2192"],["bounce","Bounce"],["wave","Wave"],["zoom","Zoom"],["shake","Shake"],["swing","Swing"],["jelly","Jelly"],["pulse","Pulse"],["blink","Blink"],["flash","Flash"],["glow","Glow"],["neon","Neon"],["rainbow","Rainbow"],["gradient","Gradient"]];
-  const themes=[["","None (plain colour)"],["pitch","\u26BD Football pitch"],["party","\uD83C\uDF89 Party"],["stars","\u2B50 Night sky"]];
+  const themes=[["","None (plain colour)"],["pitch","\u26BD Football pitch"],["court","\uD83C\uDFC0 Basketball court"],["fireworks","\uD83C\uDF86 Fireworks"],["stars","\uD83C\uDF19 Night sky"],["sun","\u2600\uFE0F Hot weather"],["snow","\u2744\uFE0F Snow"],["hearts","\uD83D\uDC97 Hearts"]];
   const animBtns=anims.map(a=>`<button class="tg ${b.anim===a[0]?"on":""}" onclick="setAnim('${a[0]}')">${a[1]}</button>`).join("");
   const emojis=["\uD83C\uDF89","\uD83D\uDC4F","\uD83D\uDC99","\uD83D\uDE4C","\u2728","\uD83C\uDFC6","\uD83E\uDE7A","\u2B50"];
   const emojiBtns=emojis.map(e=>`<button class="btn btn-ghost btn-sm" style="font-size:17px;padding:4px 9px" onclick="insertEmoji('${e}')">${e}</button>`).join("");
@@ -1000,15 +1000,29 @@ function renderBanner(){
     .ticker.jelly .ti{animation:tkJelly 1.2s ease-in-out infinite}
     .ticker.pulse .ti{animation:tkPulse 1.6s ease-in-out infinite}
     @keyframes tkRoll{0%{left:-7%;transform:translateY(-50%) rotate(0)}100%{left:107%;transform:translateY(-50%) rotate(720deg)}}
-    @keyframes tkPartyBg{0%{background-position:0% 50%}100%{background-position:300% 50%}}
     @keyframes tkTwinkle{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes tkBurst{0%{opacity:0;transform:translateY(-50%) scale(.2)}25%{opacity:1;transform:translateY(-50%) scale(1.15)}60%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:0;transform:translateY(-50%) scale(1.25)}}
+    @keyframes tkSpin{0%{transform:translateY(-50%) rotate(0)}100%{transform:translateY(-50%) rotate(360deg)}}
+    @keyframes tkSnow{0%{background-position:0 0}100%{background-position:0 60px}}
+    @keyframes tkFloat{0%{transform:translateY(10px);opacity:0}20%{opacity:1}100%{transform:translateY(-24px);opacity:0}}
+    @keyframes tkDribble{0%{left:-7%;transform:translateY(4px)}12.5%{transform:translateY(-14px)}25%{transform:translateY(4px)}37.5%{transform:translateY(-11px)}50%{transform:translateY(4px)}62.5%{transform:translateY(-14px)}75%{transform:translateY(4px)}87.5%{transform:translateY(-11px)}100%{left:107%;transform:translateY(4px)}}
     .ticker.theme-pitch{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 19px,rgba(255,255,255,.75) 19px 22px,transparent 22px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.75) calc(50% - 1.5px),rgba(255,255,255,.75) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(90deg,#1f9d55 0 30px,#1a8a4a 30px 60px);background-repeat:no-repeat,no-repeat,repeat}
     .ticker.theme-pitch::after{content:"\\26BD";position:absolute;top:50%;left:0;font-size:18px;line-height:1;z-index:1;transform:translateY(-50%);animation:tkRoll 3.5s linear infinite}
-    .ticker.theme-party{color:#fff;background:linear-gradient(120deg,#f43f5e,#f59e0b,#10b981,#3b82f6,#a855f7);background-size:300% 100%;animation:tkPartyBg 8s linear infinite}
-    .ticker.theme-party::before{content:"\\1F389";position:absolute;left:5%;top:50%;transform:translateY(-50%);font-size:18px}
-    .ticker.theme-party::after{content:"\\1F38A";position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:18px}
+    .ticker.theme-court{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 18px,rgba(255,255,255,.6) 18px 21px,transparent 21px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.6) calc(50% - 1.5px),rgba(255,255,255,.6) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(0deg,#c8813f 0 11px,#b9722f 11px 22px);background-repeat:no-repeat,no-repeat,repeat}
+    .ticker.theme-court::after{content:"\\1F3C0";position:absolute;top:calc(50% - 9px);left:0;font-size:18px;line-height:1;z-index:1;animation:tkDribble 3.2s linear infinite}
+    .ticker.theme-fireworks{color:#fff;background:linear-gradient(180deg,#0a0a2a,#241433)}
+    .ticker.theme-fireworks::before{content:"\\1F386";position:absolute;left:24%;top:50%;font-size:20px;transform:translateY(-50%);animation:tkBurst 1.8s ease-out infinite}
+    .ticker.theme-fireworks::after{content:"\\1F387";position:absolute;left:70%;top:50%;font-size:20px;transform:translateY(-50%);animation:tkBurst 1.8s ease-out infinite .9s}
     .ticker.theme-stars{color:#fff;background:linear-gradient(180deg,#0b1d3a,#13243f)}
     .ticker.theme-stars::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 60%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 75%,#fff,transparent),radial-gradient(1.5px 1.5px at 85% 40%,#fff,transparent),radial-gradient(1.5px 1.5px at 33% 50%,#fff,transparent);animation:tkTwinkle 2.4s ease-in-out infinite}
+    .ticker.theme-stars::after{content:"\\1F319";position:absolute;right:6%;top:50%;font-size:22px;transform:translateY(-50%)}
+    .ticker.theme-sun{color:#fff;background:linear-gradient(180deg,#ff6a00,#ff3d3d)}
+    .ticker.theme-sun::after{content:"\\1F31E";position:absolute;right:6%;top:50%;font-size:22px;transform:translateY(-50%);animation:tkSpin 9s linear infinite}
+    .ticker.theme-snow{color:#fff;background:linear-gradient(180deg,#3b6ea5,#9cc4e4)}
+    .ticker.theme-snow::before{content:"";position:absolute;inset:0;z-index:0;background-image:radial-gradient(2px 2px at 10% 10%,#fff,transparent),radial-gradient(2px 2px at 30% 40%,#fff,transparent),radial-gradient(2px 2px at 55% 20%,#fff,transparent),radial-gradient(2px 2px at 75% 55%,#fff,transparent),radial-gradient(2px 2px at 90% 30%,#fff,transparent),radial-gradient(2px 2px at 45% 75%,#fff,transparent);background-size:120px 60px;animation:tkSnow 2.6s linear infinite}
+    .ticker.theme-hearts{color:#fff;background:linear-gradient(120deg,#ff7eb3,#ff5fa2)}
+    .ticker.theme-hearts::before{content:"\\1F497";position:absolute;left:20%;top:55%;font-size:18px;animation:tkFloat 2.6s ease-in infinite}
+    .ticker.theme-hearts::after{content:"\\1F497";position:absolute;left:72%;top:55%;font-size:18px;animation:tkFloat 2.6s ease-in infinite 1.3s}
   </style>`;
   document.getElementById("mg").innerHTML=css+`<div class="panel pad" style="max-width:680px">
     <h2 style="margin:0 0 4px">Message board</h2>
