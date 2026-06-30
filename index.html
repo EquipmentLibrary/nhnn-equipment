@@ -966,7 +966,7 @@ function insertEmoji(e){const i=document.getElementById("bMsg");bannerEdit.text=
 function updateBannerPreview(){
   const t=document.getElementById("bprevWrap"),x=document.getElementById("bprevText");if(!t||!x)return;
   t.className="ticker "+(bannerEdit.anim||"scroll")+(bannerEdit.theme?(" theme-"+bannerEdit.theme):"");
-  t.style.background=bannerEdit.bg;t.style.color=bannerEdit.fg;t.style.setProperty("--spd",(bannerEdit.speed||18)+"s");
+  t.style.background=bannerEdit.theme?"":bannerEdit.bg;t.style.color=bannerEdit.fg;t.style.setProperty("--spd",(bannerEdit.speed||18)+"s");
   t.style.fontFamily=fontFamApp(bannerEdit.font);
   x.textContent=(bannerEdit.text||"").trim()||"Your message will appear here";
 }
@@ -1098,7 +1098,7 @@ function renderBanner(){
     </div>
 
     <label class="lab" style="margin-top:16px">Live preview</label>
-    <div class="ticker ${b.anim||"scroll"}${b.theme?" theme-"+b.theme:""}" id="bprevWrap" style="background:${b.bg||"#005EB8"};color:${b.fg||"#ffffff"};--spd:${b.speed||18}s;font-family:${fontFamApp(b.font)};margin-top:6px"><span class="ti" id="bprevText">${esc((b.text||"").trim()||"Your message will appear here")}</span></div>
+    <div class="ticker ${b.anim||"scroll"}${b.theme?" theme-"+b.theme:""}" id="bprevWrap" style="${b.theme?"":`background:${b.bg||"#005EB8"};`}color:${b.fg||"#ffffff"};--spd:${b.speed||18}s;font-family:${fontFamApp(b.font)};margin-top:6px"><span class="ti" id="bprevText">${esc((b.text||"").trim()||"Your message will appear here")}</span></div>
 
     <div style="margin-top:18px"><button class="btn btn-primary" onclick="saveBannerMsg()">Save message</button></div>
   </div>`;
