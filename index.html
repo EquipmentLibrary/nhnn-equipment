@@ -6,6 +6,7 @@
 <title>NHNN Equipment Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Fredoka:wght@600&family=Lobster&family=Pacifico&family=Poppins:wght@700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
@@ -920,14 +921,15 @@ function renderHistory(){
 }
 function setSub(s){manageSub=s;mgQuery="";anim=true;if(s==="banner"){bannerEdit=Object.assign(bannerDefaults(),data.banner||{});}render();}
 let bannerEdit=null;
-function bannerDefaults(){return {on:false,text:"",fg:"#ffffff",bg:"#005EB8",anim:"scroll",speed:18,font:""};}
+function bannerDefaults(){return {on:false,text:"",fg:"#ffffff",bg:"#005EB8",anim:"scroll",speed:18,font:"",theme:""};}
 function fontFamApp(k){const m={poppins:"'Poppins',sans-serif",pacifico:"'Pacifico',cursive",bungee:"'Bungee',cursive",press:"'Press Start 2P',monospace",lobster:"'Lobster',cursive",fred:"'Fredoka',sans-serif"};return m[k]||"system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif";}
+function setTheme(v){bannerEdit.theme=v;renderBanner();}
 function setBannerOn(v){bannerEdit.on=v;renderBanner();}
 function setAnim(v){bannerEdit.anim=v;renderBanner();}
 function insertEmoji(e){const i=document.getElementById("bMsg");bannerEdit.text=(bannerEdit.text||"")+e;if(i){i.value=bannerEdit.text;i.focus();}updateBannerPreview();}
 function updateBannerPreview(){
   const t=document.getElementById("bprevWrap"),x=document.getElementById("bprevText");if(!t||!x)return;
-  t.className="ticker "+(bannerEdit.anim||"scroll");
+  t.className="ticker "+(bannerEdit.anim||"scroll")+(bannerEdit.theme?(" theme-"+bannerEdit.theme):"");
   t.style.background=bannerEdit.bg;t.style.color=bannerEdit.fg;t.style.setProperty("--spd",(bannerEdit.speed||18)+"s");
   t.style.fontFamily=fontFamApp(bannerEdit.font);
   x.textContent=(bannerEdit.text||"").trim()||"Your message will appear here";
@@ -956,14 +958,15 @@ async function saveBannerMsg(){
 function renderBanner(){
   if(!bannerEdit)bannerEdit=Object.assign(bannerDefaults(),data.banner||{});
   const b=bannerEdit;
-  const anims=[["scroll","Slide \u2190"],["scrollRight","Slide \u2192"],["bounce","Bounce"],["wave","Wave"],["zoom","Zoom"],["shake","Shake"],["blink","Blink"],["flash","Flash"],["glow","Glow"],["neon","Neon"],["rainbow","Rainbow"],["gradient","Gradient"]];
+  const anims=[["scroll","Slide \u2190"],["scrollRight","Slide \u2192"],["bounce","Bounce"],["wave","Wave"],["zoom","Zoom"],["shake","Shake"],["swing","Swing"],["jelly","Jelly"],["pulse","Pulse"],["blink","Blink"],["flash","Flash"],["glow","Glow"],["neon","Neon"],["rainbow","Rainbow"],["gradient","Gradient"]];
+  const themes=[["","None (plain colour)"],["pitch","\u26BD Football pitch"],["party","\uD83C\uDF89 Party"],["stars","\u2B50 Night sky"]];
   const animBtns=anims.map(a=>`<button class="tg ${b.anim===a[0]?"on":""}" onclick="setAnim('${a[0]}')">${a[1]}</button>`).join("");
   const emojis=["\uD83C\uDF89","\uD83D\uDC4F","\uD83D\uDC99","\uD83D\uDE4C","\u2728","\uD83C\uDFC6","\uD83E\uDE7A","\u2B50"];
   const emojiBtns=emojis.map(e=>`<button class="btn btn-ghost btn-sm" style="font-size:17px;padding:4px 9px" onclick="insertEmoji('${e}')">${e}</button>`).join("");
   const css=`<style>
     @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Fredoka:wght@600&family=Lobster&family=Pacifico&family=Poppins:wght@700&family=Press+Start+2P&display=swap');
     .ticker{position:relative;overflow:hidden;white-space:nowrap;padding:13px 16px;font-weight:800;font-size:19px;line-height:1.3;text-align:center;border-radius:10px}
-    .ticker .ti{display:inline-block;will-change:transform}
+    .ticker .ti{display:inline-block;will-change:transform;position:relative;z-index:2}
     .ticker.scroll .ti,.ticker.scrollRight .ti{min-width:100%}
     .ticker.scroll,.ticker.scrollRight{text-align:left}
     @keyframes tkL{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
@@ -990,6 +993,22 @@ function renderBanner(){
     .ticker.flash .ti{animation:tkFlash .8s steps(1,end) infinite}
     .ticker.neon .ti{animation:tkNeon 1.5s ease-in-out infinite}
     .ticker.gradient .ti{background:linear-gradient(90deg,#ff3b30,#ff9500,#ffcc00,#34c759,#0a84ff,#5e5ce6,#ff2d55);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tkGrad var(--spd,6s) linear infinite}
+    @keyframes tkSwing{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+    @keyframes tkJelly{0%,100%{transform:scale(1,1)}30%{transform:scale(1.15,.85)}50%{transform:scale(.9,1.1)}70%{transform:scale(1.05,.95)}}
+    @keyframes tkPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.96)}}
+    .ticker.swing .ti{animation:tkSwing 1.4s ease-in-out infinite}
+    .ticker.jelly .ti{animation:tkJelly 1.2s ease-in-out infinite}
+    .ticker.pulse .ti{animation:tkPulse 1.6s ease-in-out infinite}
+    @keyframes tkRoll{0%{left:-7%;transform:translateY(-50%) rotate(0)}100%{left:107%;transform:translateY(-50%) rotate(720deg)}}
+    @keyframes tkPartyBg{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+    @keyframes tkTwinkle{0%,100%{opacity:1}50%{opacity:.4}}
+    .ticker.theme-pitch{color:#fff;background:radial-gradient(circle at 50% 50%,transparent 0 19px,rgba(255,255,255,.75) 19px 22px,transparent 22px),linear-gradient(90deg,transparent calc(50% - 1.5px),rgba(255,255,255,.75) calc(50% - 1.5px),rgba(255,255,255,.75) calc(50% + 1.5px),transparent calc(50% + 1.5px)),repeating-linear-gradient(90deg,#1f9d55 0 30px,#1a8a4a 30px 60px);background-repeat:no-repeat,no-repeat,repeat}
+    .ticker.theme-pitch::after{content:"\\26BD";position:absolute;top:50%;left:0;font-size:18px;line-height:1;z-index:1;transform:translateY(-50%);animation:tkRoll 3.5s linear infinite}
+    .ticker.theme-party{color:#fff;background:linear-gradient(120deg,#f43f5e,#f59e0b,#10b981,#3b82f6,#a855f7);background-size:300% 100%;animation:tkPartyBg 8s linear infinite}
+    .ticker.theme-party::before{content:"\\1F389";position:absolute;left:5%;top:50%;transform:translateY(-50%);font-size:18px}
+    .ticker.theme-party::after{content:"\\1F38A";position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:18px}
+    .ticker.theme-stars{color:#fff;background:linear-gradient(180deg,#0b1d3a,#13243f)}
+    .ticker.theme-stars::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 60%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 75%,#fff,transparent),radial-gradient(1.5px 1.5px at 85% 40%,#fff,transparent),radial-gradient(1.5px 1.5px at 33% 50%,#fff,transparent);animation:tkTwinkle 2.4s ease-in-out infinite}
   </style>`;
   document.getElementById("mg").innerHTML=css+`<div class="panel pad" style="max-width:680px">
     <h2 style="margin:0 0 4px">Message board</h2>
@@ -1011,6 +1030,11 @@ function renderBanner(){
       ${[["","System (default)"],["fred","Fredoka \u2014 rounded"],["poppins","Poppins \u2014 clean"],["bungee","Bungee \u2014 bold display"],["pacifico","Pacifico \u2014 script"],["lobster","Lobster \u2014 script"],["press","Press Start 2P \u2014 retro"]].map(o=>`<option value="${o[0]}" ${b.font===o[0]?"selected":""}>${o[1]}</option>`).join("")}
     </select>
 
+    <label class="lab" style="margin-top:14px">Scene <span style="font-weight:400;opacity:.55">(animated background)</span></label>
+    <select class="tinput" onchange="setTheme(this.value)">
+      ${themes.map(o=>`<option value="${o[0]}" ${b.theme===o[0]?"selected":""}>${o[1]}</option>`).join("")}
+    </select>
+
     <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:14px">
       <div><label class="lab">Text colour</label><br><input type="color" value="${b.fg||"#ffffff"}" oninput="bannerEdit.fg=this.value;updateBannerPreview()" style="width:54px;height:36px;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer"></div>
       <div><label class="lab">Background</label><br><input type="color" value="${b.bg||"#005EB8"}" oninput="bannerEdit.bg=this.value;updateBannerPreview()" style="width:54px;height:36px;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer"></div>
@@ -1019,7 +1043,7 @@ function renderBanner(){
     </div>
 
     <label class="lab" style="margin-top:16px">Live preview</label>
-    <div class="ticker ${b.anim||"scroll"}" id="bprevWrap" style="background:${b.bg||"#005EB8"};color:${b.fg||"#ffffff"};--spd:${b.speed||18}s;font-family:${fontFamApp(b.font)};margin-top:6px"><span class="ti" id="bprevText">${esc((b.text||"").trim()||"Your message will appear here")}</span></div>
+    <div class="ticker ${b.anim||"scroll"}${b.theme?" theme-"+b.theme:""}" id="bprevWrap" style="background:${b.bg||"#005EB8"};color:${b.fg||"#ffffff"};--spd:${b.speed||18}s;font-family:${fontFamApp(b.font)};margin-top:6px"><span class="ti" id="bprevText">${esc((b.text||"").trim()||"Your message will appear here")}</span></div>
 
     <div style="margin-top:18px"><button class="btn btn-primary" onclick="saveBannerMsg()">Save message</button></div>
   </div>`;
